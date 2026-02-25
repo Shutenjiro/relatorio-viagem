@@ -3,96 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório Pro V14</title>
+    <title>Relatorio Viagem</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f172a">
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #0f172a;
-            --secondary: #10b981;
-            --accent: #3b82f6;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text: #1e293b;
-            --danger: #ef4444;
-        }
-
-        body { 
-            font-family: 'Inter', sans-serif; 
-            padding: 15px; 
-            background: var(--bg); 
-            color: var(--text);
-            line-height: 1.5;
-        }
-
-        .card { 
-            background: var(--card-bg); 
-            padding: 20px; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
-            max-width: 550px; 
-            margin: auto; 
-        }
-
-        h2 { 
-            color: var(--primary); 
-            text-align: center; 
-            margin-bottom: 24px; 
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .section-title {
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #64748b;
-            margin: 20px 0 10px 0;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 5px;
-        }
-
-        label { font-size: 12px; font-weight: 600; color: var(--primary); display: block; margin-top: 10px; }
-
-        input, select { 
-            width: 100%; padding: 12px; margin: 6px 0 12px 0; 
-            border: 1px solid #e2e8f0; border-radius: 10px; 
-            box-sizing: border-box; font-size: 15px; background: white;
-        }
-
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-        .nota-item, .gasto-acumulado-item { 
-            background: #f1f5f9; padding: 15px; border-radius: 12px; 
-            margin-bottom: 10px; position: relative; border-left: 4px solid var(--secondary);
-        }
-
-        button { 
-            width: 100%; padding: 14px; background: var(--secondary); 
-            color: white; border: none; border-radius: 10px; 
-            font-weight: 600; cursor: pointer; font-size: 16px; margin-top: 10px;
-        }
-
-        .btn-add { background: #f1f5f9; color: var(--primary); font-size: 13px; padding: 10px; border: 1px dashed #cbd5e1; }
-
-        .btn-remove { background: var(--danger); width: auto; padding: 6px 12px; font-size: 11px; margin: 0; float: right; }
-
-        .btn-limpar { background: #94a3b8; margin-top: 10px; font-size: 14px; padding: 10px; }
-
-        #resultado { 
-            background: #1e293b; color: #f8fafc; padding: 20px; 
-            margin-top: 25px; border-radius: 12px; display: none; 
-            white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 13px;
-        }
-
-        .lista-resumo-gastos { font-size: 13px; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
-
-        @media (display-mode: standalone) { body { padding: 10px; } }
+        :root { --p: #0f172a; --s: #10b981; --a: #3b82f6; --bg: #f8fafc; }
+        body { font-family: sans-serif; background: var(--bg); padding: 10px; color: #1e293b; }
+        .card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
+        h2 { text-align: center; color: var(--p); }
+        .secao { font-size: 12px; text-transform: uppercase; color: #64748b; margin: 15px 0 5px; border-bottom: 1px solid #e2e8f0; }
+        label { font-size: 11px; font-weight: bold; display: block; margin-top: 8px; }
+        input, select { width: 100%; padding: 10px; margin: 4px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .item { background: #f1f5f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--s); position: relative; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 8px; }
+        .btn-add { background: #e2e8f0; color: #334155; font-size: 12px; }
+        .btn-gerar { background: var(--p); color: #fff; }
+        .btn-limpar { background: #94a3b8; color: #fff; }
+        .btn-copiar { background: var(--a); color: #fff; display: none; }
+        .btn-remove { background: #ef4444; color: #fff; width: auto; padding: 3px 8px; font-size: 10px; position: absolute; right: 5px; top: 5px; }
+        #resumo { background: #1e293b; color: #fff; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; white-space: pre-wrap; font-family: monospace; font-size: 12px; }
+        .acumulado { background: #fff; border: 1px solid #e2e8f0; padding: 8px; font-size: 12px; border-radius: 8px; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -100,36 +30,34 @@
 <div class="card">
     <h2>📊 Relatório de Viagem</h2>
     
-    <div class="section-title">Informações Básicas</div>
+    <div class="secao">Informações</div>
     <div class="grid">
-        <div><label>Data Início</label><input type="date" id="dIni"></div>
-        <div><label>Data Fim</label><input type="date" id="dFim"></div>
+        <div><label>Início</label><input type="date" id="dIni"></div>
+        <div><label>Fim</label><input type="date" id="dFim"></div>
+    </div>
+    <div class="grid">
+        <div><label>Viagem Nº</label><input type="text" id="numV"></div>
+        <div><label>Caixas (R$50)</label><input type="number" id="caixas" value="0"></div>
     </div>
 
-    <div class="grid">
-        <div><label>Viagem Nº</label><input type="text" id="numV" placeholder="Ex: 007"></div>
-        <div><label>Qtd Caixas (R$ 50)</label><input type="number" id="caixas" value="0"></div>
-    </div>
-
-    <div class="section-title">Notas e Clientes</div>
+    <div class="secao">Notas</div>
     <div id="listaNotas">
-        <div class="nota-item">
-            <label>Nome do Cliente</label>
-            <input type="text" class="nCliente" placeholder="Ex: João Silva">
+        <div class="item">
+            <label>Cliente</label>
+            <input type="text" class="nCliente">
             <div class="grid">
-                <div><label>Valor (R$)</label><input type="number" class="notaReal" placeholder="0.00" step="0.01"></div>
-                <div><label>Comissão (%)</label><input type="number" class="notaPerc" value="35"></div>
+                <div><label>Valor R$</label><input type="number" class="notaReal" step="0.01"></div>
+                <div><label>Comissão %</label><input type="number" class="notaPerc" value="35"></div>
             </div>
         </div>
     </div>
-    <button class="btn-add" onclick="addNota()">+ Adicionar Nova Nota</button>
+    <button class="btn-add" onclick="addNota()">+ Adicionar Nota</button>
 
-    <div class="section-title">Despesas de Viagem</div>
-    <div class="gasto-acumulado-item">
-        <label>Adicionar Gasto</label>
+    <div class="secao">Gastos Acumulados</div>
+    <div class="item" style="border-left-color: var(--a)">
         <div class="grid">
-            <input type="number" id="valorGastoTemp" placeholder="R$ 0,00" step="0.01">
-            <select id="tipoGastoTemp">
+            <input type="number" id="vGasto" placeholder="Valor R$" step="0.01">
+            <select id="tGasto">
                 <option value="Transporte">🚗 Transporte</option>
                 <option value="Alimentação">🍴 Alimentação</option>
                 <option value="Banheiro">🚿 Banheiro</option>
@@ -137,150 +65,94 @@
                 <option value="Outros">📦 Outros</option>
             </select>
         </div>
-        <button class="btn-add" style="margin-top:0" onclick="registrarGasto()">+ Somar Gasto</button>
+        <button class="btn-add" onclick="somarGasto()">➕ Somar Valor</button>
+        <div id="listaG" class="acumulado">Nenhum gasto.</div>
     </div>
 
-    <div id="resumoGastosDiv" class="lista-resumo-gastos">
-        <strong>Gastos Acumulados:</strong>
-        <div id="listaCategoriasSoma">Nenhum gasto registrado.</div>
-    </div>
+    <div class="secao">Passagens (Longas)</div>
+    <div id="listaPass"></div>
+    <button class="btn-add" onclick="addPass()">+ Adicionar Passagem</button>
 
-    <div id="listaPassagens">
-        <label>Passagens de Ônibus/Longas</label>
-    </div>
-    <button class="btn-add" onclick="addPassagem()">+ Adicionar Passagem</button>
+    <button class="btn-gerar" onclick="gerar()">✅ GERAR RELATÓRIO</button>
+    <button class="btn-limpar" onclick="limpar()">🗑️ LIMPAR TUDO</button>
 
-    <button onclick="gerar()" style="background: var(--primary); margin-top: 30px;">✅ Gerar Relatório Final</button>
-    <button class="btn-limpar" onclick="limparTudo()">🗑️ Limpar Dados / Novo Relatório</button>
-    
-    <div id="resultado"></div>
-    <button id="copyBtn" onclick="copiar()" style="background: var(--accent); display:none;">📋 Copiar para WhatsApp</button>
-    <textarea id="tempCopy" style="position:absolute; left:-9999px;"></textarea>
+    <div id="resumo"></div>
+    <button id="btnCopiar" class="btn-copiar" onclick="copiar()">📋 COPIAR WHATSAPP</button>
 </div>
 
 <script>
-    let acumuladoGastos = { "Transporte": 0, "Alimentação": 0, "Banheiro": 0, "Hospedagem": 0, "Outros": 0 };
+    let gastos = { Transporte: 0, Alimentação: 0, Banheiro: 0, Hospedagem: 0, Outros: 0 };
 
-    function registrarGasto() {
-        const valor = parseFloat(document.getElementById('valorGastoTemp').value) || 0;
-        const tipo = document.getElementById('tipoGastoTemp').value;
-        if (valor > 0) {
-            acumuladoGastos[tipo] += valor;
-            atualizarInterfaceGastos();
-            document.getElementById('valorGastoTemp').value = "";
+    function somarGasto() {
+        const v = parseFloat(document.getElementById('vGasto').value) || 0;
+        const t = document.getElementById('tGasto').value;
+        if(v > 0) {
+            gastos[t] += v;
+            document.getElementById('vGasto').value = "";
+            let txt = "";
+            for(let g in gastos) { if(gastos[g] > 0) txt += g + ": R$ " + gastos[g].toFixed(2) + "<br>"; }
+            document.getElementById('listaG').innerHTML = txt;
         }
-    }
-
-    function atualizarInterfaceGastos() {
-        const lista = document.getElementById('listaCategoriasSoma');
-        lista.innerHTML = "";
-        let temGasto = false;
-        for (const [cat, total] of Object.entries(acumuladoGastos)) {
-            if (total > 0) {
-                temGasto = true;
-                lista.innerHTML += `<div>• ${cat}: R$ ${fM(total)}</div>`;
-            }
-        }
-        if (!temGasto) lista.innerHTML = "Nenhum gasto registrado.";
-    }
-
-    function formatarDataBR(data) {
-        if(!data) return "";
-        const [ano, mes, dia] = data.split('-');
-        return `${dia}/${mes}/${ano}`;
     }
 
     function addNota() {
-        const div = document.createElement('div');
-        div.className = "nota-item";
-        div.innerHTML = `<button class="btn-remove" onclick="this.parentElement.remove()">remover</button><label>Nome do Cliente</label><input type="text" class="nCliente" placeholder="Nome do Cliente"><div class="grid"><div><label>Valor (R$)</label><input type="number" class="notaReal" placeholder="0.00" step="0.01"></div><div><label>Comissão (%)</label><input type="number" class="notaPerc" value="35"></div></div>`;
-        document.getElementById('listaNotas').appendChild(div);
+        const d = document.createElement('div');
+        d.className = "item";
+        d.innerHTML = '<button class="btn-remove" onclick="this.parentElement.remove()">X</button><label>Cliente</label><input type="text" class="nCliente"><div class="grid"><div><label>Valor R$</label><input type="number" class="notaReal" step="0.01"></div><div><label>Comissão %</label><input type="number" class="notaPerc" value="35"></div></div>';
+        document.getElementById('listaNotas').appendChild(d);
     }
 
-    function addPassagem() {
-        const div = document.createElement('div');
-        div.style = "display: flex; gap: 8px; margin-bottom: 8px;";
-        div.innerHTML = `<input type="text" placeholder="Rota" class="pRota" style="margin:0"><input type="number" placeholder="Valor" class="pValor" step="0.01" style="width: 40%; margin:0"><button class="btn-remove" style="padding:10px" onclick="this.parentElement.remove()">X</button>`;
-        document.getElementById('listaPassagens').appendChild(div);
+    function addPass() {
+        const d = document.createElement('div');
+        d.style.display = "flex"; d.style.gap = "5px";
+        d.innerHTML = '<input type="text" placeholder="Rota" class="pRota"><input type="number" placeholder="R$" class="pVal" style="width:80px"><button onclick="this.parentElement.remove()" style="width:40px;margin:0">X</button>';
+        document.getElementById('listaPass').appendChild(d);
     }
-
-    function fM(v) { return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
     function gerar() {
-        const dIni = formatarDataBR(document.getElementById('dIni').value);
-        const dFim = formatarDataBR(document.getElementById('dFim').value);
-        const numV = document.getElementById('numV').value;
-        const qtdCaixas = parseFloat(document.getElementById('caixas').value) || 0;
-        let totalNotasPagas = 0, totalComissaoNotas = 0, txtClientes = "";
-        const clientes = document.getElementsByClassName('nCliente'), valores = document.getElementsByClassName('notaReal'), percs = document.getElementsByClassName('notaPerc');
-
-        for(let i=0; i < valores.length; i++) {
-            let v = parseFloat(valores[i].value) || 0, p = parseFloat(percs[i].value) || 0, nome = clientes[i].value || `Cliente ${i+1}`;
-            if (v > 0) {
-                totalNotasPagas += v;
-                totalComissaoNotas += (v * (p / 100));
-                txtClientes += `▪️ ${nome}: R$ ${fM(v)} (+${p}%)\n`;
+        const nV = document.getElementById('numV').value;
+        const cx = (parseFloat(document.getElementById('caixas').value) || 0) * 50;
+        
+        let tNotas = 0, tComis = 0, txtC = "";
+        const cl = document.getElementsByClassName('nCliente'), vl = document.getElementsByClassName('notaReal'), pc = document.getElementsByClassName('notaPerc');
+        
+        for(let i=0; i<cl.length; i++) {
+            let v = parseFloat(vl[i].value) || 0, p = parseFloat(pc[i].value) || 0;
+            if(v > 0) {
+                tNotas += v; tComis += (v * p / 100);
+                txtC += "▪️ " + (cl[i].value || "Cli") + ": R$ " + v.toFixed(2) + "\n";
             }
         }
 
-        let totalGastos = 0, txtGastos = "";
-        for (const [cat, total] of Object.entries(acumuladoGastos)) {
-            if (total > 0) { totalGastos += total; txtGastos += `• ${cat}: R$ ${fM(total)}\n`; }
-        }
-        const rotas = document.getElementsByClassName('pRota'), vPass = document.getElementsByClassName('pValor');
-        for(let i=0; i < rotas.length; i++) {
-            let v = parseFloat(vPass[i].value) || 0;
-            if(v > 0) { totalGastos += v; txtGastos += `• Passagem ${rotas[i].value || 'Viagem'}: R$ ${fM(v)}\n`; }
+        let tG = 0, txtG = "";
+        for(let g in gastos) { if(gastos[g]>0) { tG += gastos[g]; txtG += "• " + g + ": R$ " + gastos[g].toFixed(2) + "\n"; } }
+        
+        const pr = document.getElementsByClassName('pRota'), pv = document.getElementsByClassName('pVal');
+        for(let i=0; i<pr.length; i++) {
+            let v = parseFloat(pv[i].value) || 0;
+            if(v > 0) { tG += v; txtG += "• Passagem " + pr[i].value + ": R$ " + v.toFixed(2) + "\n"; }
         }
 
-        const valorDasCaixas = qtdCaixas * 50;
-        const lucroBruto = totalComissaoNotas + valorDasCaixas;
-        const lucroLiquido = lucroBruto - totalGastos;
-        const totalReceber = totalNotasPagas + totalComissaoNotas + valorDasCaixas;
+        const liq = (tComis + cx) - tG;
+        const rec = tNotas + tComis + cx;
 
-        const texto = `*📊 RELATÓRIO DE VIAGEM - Nº ${numV}*\n📅 Período: ${dIni} até ${dFim}\n\n*📋 DETALHAMENTO DE NOTAS:*\n${txtClientes}Total Notas: R$ ${fM(totalNotasPagas)}\nTotal Comissões: R$ ${fM(totalComissaoNotas)}\n\n*💸 DESPESAS:*\n${txtGastos || "Nenhuma despesa registrada\n"}*Total Gastos: R$ ${fM(totalGastos)}*\n\n*💰 RESUMO FINANCEIRO:*\n• Caixas (${qtdCaixas}): R$ ${fM(valorDasCaixas)}\n• Lucro Bruto: R$ ${fM(lucroBruto)}\n• *LUCRO LÍQUIDO: R$ ${fM(lucroLiquido)}*\n\n------------------------------\n*TOTAL A RECEBER: R$ ${fM(totalReceber)}*\n------------------------------`;
-        document.getElementById('resultado').innerText = texto;
-        document.getElementById('resultado').style.display = 'block';
-        document.getElementById('copyBtn').style.display = 'block';
-        document.getElementById('resultado').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function limparTudo() {
-        if (confirm("Deseja realmente limpar todos os dados e começar um novo relatório?")) {
-            document.querySelectorAll('input').forEach(input => input.value = "");
-            document.getElementById('caixas').value = "0";
-            acumuladoGastos = { "Transporte": 0, "Alimentação": 0, "Banheiro": 0, "Hospedagem": 0, "Outros": 0 };
-            document.getElementById('listaNotas').innerHTML = `<div class="nota-item"><label>Nome do Cliente</label><input type="text" class="nCliente" placeholder="Ex: João Silva"><div class="grid"><div><label>Valor (R$)</label><input type="number" class="notaReal" placeholder="0.00" step="0.01"></div><div><label>Comissão (%)</label><input type="number" class="notaPerc" value="35"></div></div></div>`;
-            document.getElementById('listaPassagens').innerHTML = '<label>Passagens de Ônibus/Longas</label>';
-            atualizarInterfaceGastos();
-            document.getElementById('resultado').style.display = 'none';
-            document.getElementById('copyBtn').style.display = 'none';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        const res = "*RELATÓRIO Nº " + nV + "*\n\n*NOTAS:*\n" + txtC + "Total Notas: R$ " + tNotas.toFixed(2) + "\nTotal Comis: R$ " + tComis.toFixed(2) + "\n\n*DESPESAS:*\n" + txtG + "Total Gastos: R$ " + tG.toFixed(2) + "\n\n*RESUMO:*\n• Caixas: R$ " + cx.toFixed(2) + "\n• Lucro Líquido: R$ " + liq.toFixed(2) + "\n\n*TOTAL A RECEBER: R$ " + rec.toFixed(2) + "*";
+        
+        document.getElementById('resumo').innerText = res;
+        document.getElementById('resumo').style.display = "block";
+        document.getElementById('btnCopiar').style.display = "block";
     }
 
     function copiar() {
-        const text = document.getElementById('resultado').innerText;
-        const btn = document.getElementById('copyBtn');
-        const tempInput = document.getElementById('tempCopy');
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(text).then(() => feedbackCopiado(btn));
-        } else {
-            tempInput.value = text; tempInput.select(); tempInput.setSelectionRange(0, 99999);
-            document.execCommand("copy"); feedbackCopiado(btn);
-        }
+        const t = document.getElementById('resumo').innerText;
+        const i = document.createElement('textarea');
+        i.value = t; document.body.appendChild(i); i.select();
+        document.execCommand('copy'); document.body.removeChild(i);
+        alert("Copiado!");
     }
 
-    function feedbackCopiado(btn) {
-        const originalText = btn.innerText;
-        btn.innerText = "✅ COPIADO!";
-        setTimeout(() => btn.innerText = originalText, 2000);
-    }
-
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js').then(() => console.log("SW OK"));
-        });
+    function limpar() {
+        if(confirm("Limpar tudo?")) location.reload();
     }
 </script>
 </body>
