@@ -1,58 +1,287 @@
-<style>
-    /* ... seus estilos anteriores ... */
-    .btn-limpar {
-        background: #94a3b8;
-        margin-top: 10px;
-        font-size: 14px;
-        padding: 10px;
-    }
-    /* Estilo para rodar como App (Ocultar elementos se necessário) */
-    @media (display-mode: standalone) {
-        body { padding: 10px; }
-    }
-</style>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Pro V14</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0f172a;
+            --secondary: #10b981;
+            --accent: #3b82f6;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --danger: #ef4444;
+        }
 
-<button onclick="gerar()" style="background: var(--primary); margin-top: 30px;">✅ Gerar Relatório Final</button>
-<button class="btn-limpar" onclick="limparTudo()">🗑️ Limpar Dados / Novo Relatório</button>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            padding: 15px; 
+            background: var(--bg); 
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .card { 
+            background: var(--card-bg); 
+            padding: 20px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+            max-width: 550px; 
+            margin: auto; 
+        }
+
+        h2 { 
+            color: var(--primary); 
+            text-align: center; 
+            margin-bottom: 24px; 
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin: 20px 0 10px 0;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 5px;
+        }
+
+        label { font-size: 12px; font-weight: 600; color: var(--primary); display: block; margin-top: 10px; }
+
+        input, select { 
+            width: 100%; padding: 12px; margin: 6px 0 12px 0; 
+            border: 1px solid #e2e8f0; border-radius: 10px; 
+            box-sizing: border-box; font-size: 15px; background: white;
+        }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .nota-item, .gasto-acumulado-item { 
+            background: #f1f5f9; padding: 15px; border-radius: 12px; 
+            margin-bottom: 10px; position: relative; border-left: 4px solid var(--secondary);
+        }
+
+        button { 
+            width: 100%; padding: 14px; background: var(--secondary); 
+            color: white; border: none; border-radius: 10px; 
+            font-weight: 600; cursor: pointer; font-size: 16px; margin-top: 10px;
+        }
+
+        .btn-add { background: #f1f5f9; color: var(--primary); font-size: 13px; padding: 10px; border: 1px dashed #cbd5e1; }
+
+        .btn-remove { background: var(--danger); width: auto; padding: 6px 12px; font-size: 11px; margin: 0; float: right; }
+
+        .btn-limpar { background: #94a3b8; margin-top: 10px; font-size: 14px; padding: 10px; }
+
+        #resultado { 
+            background: #1e293b; color: #f8fafc; padding: 20px; 
+            margin-top: 25px; border-radius: 12px; display: none; 
+            white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 13px;
+        }
+
+        .lista-resumo-gastos { font-size: 13px; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
+
+        @media (display-mode: standalone) { body { padding: 10px; } }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>📊 Relatório de Viagem</h2>
+    
+    <div class="section-title">Informações Básicas</div>
+    <div class="grid">
+        <div><label>Data Início</label><input type="date" id="dIni"></div>
+        <div><label>Data Fim</label><input type="date" id="dFim"></div>
+    </div>
+
+    <div class="grid">
+        <div><label>Viagem Nº</label><input type="text" id="numV" placeholder="Ex: 007"></div>
+        <div><label>Qtd Caixas (R$ 50)</label><input type="number" id="caixas" value="0"></div>
+    </div>
+
+    <div class="section-title">Notas e Clientes</div>
+    <div id="listaNotas">
+        <div class="nota-item">
+            <label>Nome do Cliente</label>
+            <input type="text" class="nCliente" placeholder="Ex: João Silva">
+            <div class="grid">
+                <div><label>Valor (R$)</label><input type="number" class="notaReal" placeholder="0.00" step="0.01"></div>
+                <div><label>Comissão (%)</label><input type="number" class="notaPerc" value="35"></div>
+            </div>
+        </div>
+    </div>
+    <button class="btn-add" onclick="addNota()">+ Adicionar Nova Nota</button>
+
+    <div class="section-title">Despesas de Viagem</div>
+    <div class="gasto-acumulado-item">
+        <label>Adicionar Gasto</label>
+        <div class="grid">
+            <input type="number" id="valorGastoTemp" placeholder="R$ 0,00" step="0.01">
+            <select id="tipoGastoTemp">
+                <option value="Transporte">🚗 Transporte</option>
+                <option value="Alimentação">🍴 Alimentação</option>
+                <option value="Banheiro">🚿 Banheiro</option>
+                <option value="Hospedagem">🏨 Hospedagem</option>
+                <option value="Outros">📦 Outros</option>
+            </select>
+        </div>
+        <button class="btn-add" style="margin-top:0" onclick="registrarGasto()">+ Somar Gasto</button>
+    </div>
+
+    <div id="resumoGastosDiv" class="lista-resumo-gastos">
+        <strong>Gastos Acumulados:</strong>
+        <div id="listaCategoriasSoma">Nenhum gasto registrado.</div>
+    </div>
+
+    <div id="listaPassagens">
+        <label>Passagens de Ônibus/Longas</label>
+    </div>
+    <button class="btn-add" onclick="addPassagem()">+ Adicionar Passagem</button>
+
+    <button onclick="gerar()" style="background: var(--primary); margin-top: 30px;">✅ Gerar Relatório Final</button>
+    <button class="btn-limpar" onclick="limparTudo()">🗑️ Limpar Dados / Novo Relatório</button>
+    
+    <div id="resultado"></div>
+    <button id="copyBtn" onclick="copiar()" style="background: var(--accent); display:none;">📋 Copiar para WhatsApp</button>
+    <textarea id="tempCopy" style="position:absolute; left:-9999px;"></textarea>
+</div>
 
 <script>
-    // ... todas as funções anteriores (registrarGasto, atualizarInterfaceGastos, etc) ...
+    let acumuladoGastos = { "Transporte": 0, "Alimentação": 0, "Banheiro": 0, "Hospedagem": 0, "Outros": 0 };
+
+    function registrarGasto() {
+        const valor = parseFloat(document.getElementById('valorGastoTemp').value) || 0;
+        const tipo = document.getElementById('tipoGastoTemp').value;
+        if (valor > 0) {
+            acumuladoGastos[tipo] += valor;
+            atualizarInterfaceGastos();
+            document.getElementById('valorGastoTemp').value = "";
+        }
+    }
+
+    function atualizarInterfaceGastos() {
+        const lista = document.getElementById('listaCategoriasSoma');
+        lista.innerHTML = "";
+        let temGasto = false;
+        for (const [cat, total] of Object.entries(acumuladoGastos)) {
+            if (total > 0) {
+                temGasto = true;
+                lista.innerHTML += `<div>• ${cat}: R$ ${fM(total)}</div>`;
+            }
+        }
+        if (!temGasto) lista.innerHTML = "Nenhum gasto registrado.";
+    }
+
+    function formatarDataBR(data) {
+        if(!data) return "";
+        const [ano, mes, dia] = data.split('-');
+        return `${dia}/${mes}/${ano}`;
+    }
+
+    function addNota() {
+        const div = document.createElement('div');
+        div.className = "nota-item";
+        div.innerHTML = `<button class="btn-remove" onclick="this.parentElement.remove()">remover</button><label>Nome do Cliente</label><input type="text" class="nCliente" placeholder="Nome do Cliente"><div class="grid"><div><label>Valor (R$)</label><input type="number" class="notaReal" placeholder="0.00" step="0.01"></div><div><label>Comissão (%)</label><input type="number" class="notaPerc" value="35"></div></div>`;
+        document.getElementById('listaNotas').appendChild(div);
+    }
+
+    function addPassagem() {
+        const div = document.createElement('div');
+        div.style = "display: flex; gap: 8px; margin-bottom: 8px;";
+        div.innerHTML = `<input type="text" placeholder="Rota" class="pRota" style="margin:0"><input type="number" placeholder="Valor" class="pValor" step="0.01" style="width: 40%; margin:0"><button class="btn-remove" style="padding:10px" onclick="this.parentElement.remove()">X</button>`;
+        document.getElementById('listaPassagens').appendChild(div);
+    }
+
+    function fM(v) { return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+    function gerar() {
+        const dIni = formatarDataBR(document.getElementById('dIni').value);
+        const dFim = formatarDataBR(document.getElementById('dFim').value);
+        const numV = document.getElementById('numV').value;
+        const qtdCaixas = parseFloat(document.getElementById('caixas').value) || 0;
+        let totalNotasPagas = 0, totalComissaoNotas = 0, txtClientes = "";
+        const clientes = document.getElementsByClassName('nCliente'), valores = document.getElementsByClassName('notaReal'), percs = document.getElementsByClassName('notaPerc');
+
+        for(let i=0; i < valores.length; i++) {
+            let v = parseFloat(valores[i].value) || 0, p = parseFloat(percs[i].value) || 0, nome = clientes[i].value || `Cliente ${i+1}`;
+            if (v > 0) {
+                totalNotasPagas += v;
+                totalComissaoNotas += (v * (p / 100));
+                txtClientes += `▪️ ${nome}: R$ ${fM(v)} (+${p}%)\n`;
+            }
+        }
+
+        let totalGastos = 0, txtGastos = "";
+        for (const [cat, total] of Object.entries(acumuladoGastos)) {
+            if (total > 0) { totalGastos += total; txtGastos += `• ${cat}: R$ ${fM(total)}\n`; }
+        }
+        const rotas = document.getElementsByClassName('pRota'), vPass = document.getElementsByClassName('pValor');
+        for(let i=0; i < rotas.length; i++) {
+            let v = parseFloat(vPass[i].value) || 0;
+            if(v > 0) { totalGastos += v; txtGastos += `• Passagem ${rotas[i].value || 'Viagem'}: R$ ${fM(v)}\n`; }
+        }
+
+        const valorDasCaixas = qtdCaixas * 50;
+        const lucroBruto = totalComissaoNotas + valorDasCaixas;
+        const lucroLiquido = lucroBruto - totalGastos;
+        const totalReceber = totalNotasPagas + totalComissaoNotas + valorDasCaixas;
+
+        const texto = `*📊 RELATÓRIO DE VIAGEM - Nº ${numV}*\n📅 Período: ${dIni} até ${dFim}\n\n*📋 DETALHAMENTO DE NOTAS:*\n${txtClientes}Total Notas: R$ ${fM(totalNotasPagas)}\nTotal Comissões: R$ ${fM(totalComissaoNotas)}\n\n*💸 DESPESAS:*\n${txtGastos || "Nenhuma despesa registrada\n"}*Total Gastos: R$ ${fM(totalGastos)}*\n\n*💰 RESUMO FINANCEIRO:*\n• Caixas (${qtdCaixas}): R$ ${fM(valorDasCaixas)}\n• Lucro Bruto: R$ ${fM(lucroBruto)}\n• *LUCRO LÍQUIDO: R$ ${fM(lucroLiquido)}*\n\n------------------------------\n*TOTAL A RECEBER: R$ ${fM(totalReceber)}*\n------------------------------`;
+        document.getElementById('resultado').innerText = texto;
+        document.getElementById('resultado').style.display = 'block';
+        document.getElementById('copyBtn').style.display = 'block';
+        document.getElementById('resultado').scrollIntoView({ behavior: 'smooth' });
+    }
 
     function limparTudo() {
         if (confirm("Deseja realmente limpar todos os dados e começar um novo relatório?")) {
-            // Limpa campos de texto e data
             document.querySelectorAll('input').forEach(input => input.value = "");
             document.getElementById('caixas').value = "0";
-            
-            // Reseta o objeto de gastos
-            acumuladoGastos = {
-                "Transporte": 0, "Alimentação": 0, "Banheiro": 0, "Hospedagem": 0, "Outros": 0
-            };
-            
-            // Limpa listas dinâmicas
-            document.getElementById('listaNotas').innerHTML = `
-                <div class="nota-item">
-                    <label>Nome do Cliente</label>
-                    <input type="text" class="nCliente" placeholder="Ex: João Silva">
-                    <div class="grid">
-                        <div><label>Valor (R$)</label><input type="number" class="notaReal" placeholder="0.00" step="0.01"></div>
-                        <div><label>Comissão (%)</label><input type="number" class="notaPerc" value="35"></div>
-                    </div>
-                </div>`;
+            acumuladoGastos = { "Transporte": 0, "Alimentação": 0, "Banheiro": 0, "Hospedagem": 0, "Outros": 0 };
+            document.getElementById('listaNotas').innerHTML = `<div class="nota-item"><label>Nome do Cliente</label><input type="text" class="nCliente" placeholder="Ex: João Silva"><div class="grid"><div><label>Valor (R$)</label><input type="number" class="notaReal" placeholder="0.00" step="0.01"></div><div><label>Comissão (%)</label><input type="number" class="notaPerc" value="35"></div></div></div>`;
             document.getElementById('listaPassagens').innerHTML = '<label>Passagens de Ônibus/Longas</label>';
-            
-            // Limpa visual
             atualizarInterfaceGastos();
             document.getElementById('resultado').style.display = 'none';
             document.getElementById('copyBtn').style.display = 'none';
-            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 
-    // REGISTRO DO SERVICE WORKER PARA PWA
+    function copiar() {
+        const text = document.getElementById('resultado').innerText;
+        const btn = document.getElementById('copyBtn');
+        const tempInput = document.getElementById('tempCopy');
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => feedbackCopiado(btn));
+        } else {
+            tempInput.value = text; tempInput.select(); tempInput.setSelectionRange(0, 99999);
+            document.execCommand("copy"); feedbackCopiado(btn);
+        }
+    }
+
+    function feedbackCopiado(btn) {
+        const originalText = btn.innerText;
+        btn.innerText = "✅ COPIADO!";
+        setTimeout(() => btn.innerText = originalText, 2000);
+    }
+
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-          .then(() => console.log("Service Worker registrado com sucesso!"));
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').then(() => console.log("SW OK"));
+        });
     }
 </script>
+</body>
+</html>
