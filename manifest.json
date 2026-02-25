@@ -1,15 +1,16 @@
 {
   "name": "Relatório Viagem Pro",
-  "short_name": "RelatórioV14",
-  "start_url": "index.html",
+  "short_name": "Relatório",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f8fafc",
+  "background_color": "#ffffff",
   "theme_color": "#0f172a",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3145/3145457.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
