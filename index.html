@@ -104,4 +104,123 @@
             document.getElementById('numV').value = d.numV || "";
             document.getElementById('caixas').value = d.caixas || 0;
             gastos = d.gastos || gastos;
-            if(d.notas && d.notas.length > 0
+            if(d.notas && d.notas.length > 0) {
+                d.notas.forEach(n => addNota(n.nome, n.valor, n.perc));
+            } else { addNota(); }
+            if(d.passagens) d.passagens.forEach(p => addPass(p.rota, p.valor));
+            atualizarListaGastos();
+        } else {
+            addNota();
+        }
+    }
+
+    function somarGasto() {
+        const v = parseFloat(document.getElementById('vGasto').value) || 0;
+        const t = document.getElementById('tGasto').value;
+        if(v > 0) {
+            gastos[t] += v;
+            document.getElementById('vGasto').value = "";
+            atualizarListaGastos();
+            salvarDados();
+        }
+    }
+
+    function atualizarListaGastos() {
+        let txt = "";
+        for(let g in gastos) { if(gastos[g] > 0) txt += g + ": R$ " + gastos[g].toLocaleString('pt-BR', {minimumFractionDigits: 2}) + "<br>"; }
+        document.getElementById('listaG').innerHTML = txt || "Nenhum gasto.";
+    }
+
+    function addNota(n="", v="", p="35") {
+        const d = document.createElement('div');
+        d.className = "item";
+        d.innerHTML = `<button class="btn-remove" onclick="this.parentElement.remove(); salvarDados()">X</button><label>Cliente</label><input type="text" class="nCliente" value="${n}"><div class="grid"><div><label>Valor R$</label><input type="number" class="notaReal" step="0.01" value="${v}"></div><div><label>Comissão %</label><input type="number" class="notaPerc" value="${p}"></div></div>`;
+        document.getElementById('listaNotas').appendChild(d);
+    }
+
+    function addPass(r="", v="") {
+        const d = document.createElement('div');
+        d.style.display = "flex"; d.style.gap = "5px"; d.style.marginBottom = "5px";
+        d.innerHTML = `<input type="text" placeholder="Rota" class="pRota" value="${r}"><input type="number" placeholder="R$" class="pVal" style="width:80px" value="${v}"><button onclick="this.parentElement.remove(); salvarDados()" style="width:40px;margin:0;background:#ef4444;color:#fff">X</button>`;
+        document.getElementById('listaPass').appendChild(d);
+    }
+
+    function gerar() {
+        const nV = document.getElementById('numV').value;
+        const dIni = document.getElementById('dIni').value;
+        const dFim = document.getElementById('dFim').value;
+        const numCaixas = parseFloat(document.getElementById('caixas').value) || 0;
+        const valCaixas = numCaixas * 50;
+        
+        const fMoeda = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const fData = (d) => {
+            if(!d) return "--/--/----";
+            const [ano, mes, dia] = d.split('-');
+            return `${dia}/${mes}/${ano}`;
+        };
+
+        let tNotas = 0, tComis = 0, txtC = "";
+        const cl = document.getElementsByClassName('nCliente'), vl = document.getElementsByClassName('notaReal'), pc = document.getElementsByClassName('notaPerc');
+        
+        for(let i=0; i<cl.length; i++) {
+            let v = parseFloat(vl[i].value) || 0, p = parseFloat(pc[i].value) || 0;
+            if(v > 0) {
+                tNotas += v; tComis += (v * p / 100);
+                txtC += "▪️ " + (cl[i].value || "Cliente") + " : " + fMoeda(v) + " (+" + p + "%)\n";
+            }
+        }
+
+        let tG = 0, txtG = "";
+        for(let g in gastos) { 
+            if(gastos[g]>0) { tG += gastos[g]; txtG += "• " + g + ": " + fMoeda(gastos[g]) + "\n"; } 
+        }
+        const pr = document.getElementsByClassName('pRota'), pv = document.getElementsByClassName('pVal');
+        for(let i=0; i<pr.length; i++) {
+            let v = parseFloat(pv[i].value) || 0;
+            if(v > 0) { tG += v; txtG += "• Passagem " + pr[i].value + ": " + fMoeda(v) + "\n"; }
+        }
+
+        const lucroBruto = tComis + valCaixas;
+        const lucroLiquido = lucroBruto - tG;
+        const totalReceber = tNotas + lucroBruto;
+
+        let res = "*📊 RELATÓRIO DE VIAGEM - Nº " + nV + "*\n";
+        res += "📅 Período: " + fData(dIni) + " até " + fData(dFim) + "\n\n";
+        res += "*📋 DETALHAMENTO DE NOTAS:*\n" + txtC + "\n";
+        res += "Total Notas: " + fMoeda(tNotas) + "\n";
+        res += "Total Comissões: " + fMoeda(tComis) + "\n\n";
+        res += "*💸 DESPESAS:*\n" + txtG + "\n";
+        res += "*Total Gastos: " + fMoeda(tG) + "*\n\n";
+        res += "*💰 RESUMO FINANCEIRO:*\n";
+        res += "• Caixas (" + numCaixas + "): " + fMoeda(valCaixas) + "\n";
+        res += "• Lucro Bruto: " + fMoeda(lucroBruto) + "\n";
+        res += "• *LUCRO LÍQUIDO: " + fMoeda(lucroLiquido) + "*\n\n";
+        res += "------------------------------\n";
+        res += "*TOTAL A RECEBER: " + fMoeda(totalReceber) + "*\n";
+        res += "------------------------------";
+        
+        document.getElementById('resumo').innerText = res;
+        document.getElementById('resumo').style.display = "block";
+        document.getElementById('btnCopiar').style.display = "block";
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function copiar() {
+        const t = document.getElementById('resumo').innerText;
+        const i = document.createElement('textarea');
+        i.value = t; document.body.appendChild(i); i.select();
+        document.execCommand('copy'); document.body.removeChild(i);
+        alert("Copiado com sucesso!");
+    }
+
+    function limpar() {
+        if(confirm("Deseja realmente apagar tudo?")) {
+            localStorage.removeItem('dadosRelatorio');
+            location.reload();
+        }
+    }
+
+    window.onload = carregarDados;
+</script>
+</body>
+</html>
