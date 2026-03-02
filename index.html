@@ -1,221 +1,71 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatorio Viagem Pro</title>
-    <link rel="manifest" href="manifest.json">
-    <style>
-        :root { --p: #0f172a; --s: #10b981; --a: #3b82f6; --bg: #f8fafc; }
-        body { font-family: sans-serif; background: var(--bg); padding: 10px; color: #1e293b; }
-        .card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        h2 { text-align: center; color: var(--p); margin-bottom: 10px; }
-        .secao { font-size: 11px; text-transform: uppercase; color: #64748b; margin: 15px 0 5px; border-bottom: 1px solid #e2e8f0; font-weight: bold; }
-        label { font-size: 11px; font-weight: bold; display: block; margin-top: 8px; }
-        input, select { width: 100%; padding: 10px; margin: 4px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .item { background: #f1f5f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--s); position: relative; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 8px; transition: 0.2s; }
-        .btn-add { background: #e2e8f0; color: #334155; font-size: 12px; }
-        .btn-gerar { background: var(--p); color: #fff; margin-top: 20px; }
-        .btn-limpar { background: #94a3b8; color: #fff; font-size: 12px; }
-        .btn-copiar { background: var(--a); color: #fff; display: none; }
-        .btn-remove { background: #ef4444; color: #fff; width: auto; padding: 3px 8px; font-size: 10px; position: absolute; right: 5px; top: 5px; }
-        #resumo { background: #1e293b; color: #fff; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; white-space: pre-wrap; font-family: monospace; font-size: 12px; border-left: 4px solid var(--a); }
-        .acumulado { background: #fff; border: 1px solid #e2e8f0; padding: 8px; font-size: 12px; border-radius: 8px; margin-top: 5px; min-height: 20px; }
-    </style>
-</head>
-<body oninput="salvarDados()">
-
-<div class="card">
-    <h2>📊 Relatório de Viagem</h2>
-    
-    <div class="secao">Informações</div>
-    <div class="grid">
-        <div><label>Início</label><input type="date" id="dIni"></div>
-        <div><label>Fim</label><input type="date" id="dFim"></div>
-    </div>
-    <div class="grid">
-        <div><label>Viagem Nº</label><input type="text" id="numV"></div>
-        <div><label>Caixas (R$50)</label><input type="number" id="caixas" value="0"></div>
-    </div>
-
-    <div class="secao">Notas</div>
-    <div id="listaNotas">
-        </div>
-    <button class="btn-add" onclick="addNota()">+ Adicionar Nota</button>
-
-    <div class="secao">Gastos Acumulados</div>
-    <div class="item" style="border-left-color: var(--a)">
-        <div class="grid">
-            <input type="number" id="vGasto" placeholder="Valor R$" step="0.01">
-            <select id="tGasto">
-                <option value="Transporte">🚗 Transporte</option>
-                <option value="Alimentação">🍴 Alimentação</option>
-                <option value="Banheiro">🚿 Banheiro</option>
-                <option value="Hospedagem">🏨 Hospedagem</option>
-                <option value="Outros">📦 Outros</option>
-            </select>
-        </div>
-        <button class="btn-add" onclick="somarGasto()">➕ Somar Valor</button>
-        <div id="listaG" class="acumulado">Nenhum gasto.</div>
-    </div>
-
-    <div class="secao">Passagens (Longas)</div>
-    <div id="listaPass"></div>
-    <button class="btn-add" onclick="addPass()">+ Adicionar Passagem</button>
-
-    <button class="btn-gerar" onclick="gerar()">✅ GERAR RELATÓRIO</button>
-    <button class="btn-limpar" onclick="limpar()">🗑️ LIMPAR TUDO</button>
-
-    <div id="resumo"></div>
-    <button id="btnCopiar" class="btn-copiar" onclick="copiar()">📋 COPIAR WHATSAPP</button>
-</div>
-
-<script>
-    let gastos = { Transporte: 0, Alimentação: 0, Banheiro: 0, Hospedagem: 0, Outros: 0 };
-
-    // Função para salvar tudo no LocalStorage
-    function salvarDados() {
-        const dados = {
-            dIni: document.getElementById('dIni').value,
-            dFim: document.getElementById('dFim').value,
-            numV: document.getElementById('numV').value,
-            caixas: document.getElementById('caixas').value,
-            gastos: gastos,
-            notas: [],
-            passagens: []
-        };
-
-        // Salvar Notas
-        const cl = document.getElementsByClassName('nCliente'), vl = document.getElementsByClassName('notaReal'), pc = document.getElementsByClassName('notaPerc');
-        for(let i=0; i<cl.length; i++) {
-            dados.notas.push({ nome: cl[i].value, valor: vl[i].value, perc: pc[i].value });
-        }
-
-        // Salvar Passagens
-        const pr = document.getElementsByClassName('pRota'), pv = document.getElementsByClassName('pVal');
-        for(let i=0; i<pr.length; i++) {
-            dados.passagens.push({ rota: pr[i].value, valor: pv[i].value });
-        }
-
-        localStorage.setItem('dadosRelatorio', JSON.stringify(dados));
-    }
-
-    // Função para carregar os dados ao abrir o app
-    function carregarDados() {
-        const salvo = localStorage.getItem('dadosRelatorio');
-        if(salvo) {
-            const d = JSON.parse(salvo);
-            document.getElementById('dIni').value = d.dIni || "";
-            document.getElementById('dFim').value = d.dFim || "";
-            document.getElementById('numV').value = d.numV || "";
-            document.getElementById('caixas').value = d.caixas || 0;
-            gastos = d.gastos || gastos;
-            
-            // Reconstruir Notas
-            if(d.notas && d.notas.length > 0) {
-                d.notas.forEach(n => addNota(n.nome, n.valor, n.perc));
-            } else { addNota(); }
-
-            // Reconstruir Passagens
-            if(d.passagens) d.passagens.forEach(p => addPass(p.rota, p.valor));
-
-            atualizarListaGastos();
-        } else {
-            addNota(); // Se não tem nada salvo, começa com uma nota vazia
-        }
-    }
-
-    function somarGasto() {
-        const v = parseFloat(document.getElementById('vGasto').value) || 0;
-        const t = document.getElementById('tGasto').value;
-        if(v > 0) {
-            gastos[t] += v;
-            document.getElementById('vGasto').value = "";
-            atualizarListaGastos();
-            salvarDados();
-        }
-    }
-
-    function atualizarListaGastos() {
-        let txt = "";
-        for(let g in gastos) { if(gastos[g] > 0) txt += g + ": R$ " + gastos[g].toFixed(2) + "<br>"; }
-        document.getElementById('listaG').innerHTML = txt || "Nenhum gasto.";
-    }
-
-    function addNota(n="", v="", p="35") {
-        const d = document.createElement('div');
-        d.className = "item";
-        d.innerHTML = `<button class="btn-remove" onclick="this.parentElement.remove(); salvarDados()">X</button><label>Cliente</label><input type="text" class="nCliente" value="${n}"><div class="grid"><div><label>Valor R$</label><input type="number" class="notaReal" step="0.01" value="${v}"></div><div><label>Comissão %</label><input type="number" class="notaPerc" value="${p}"></div></div>`;
-        document.getElementById('listaNotas').appendChild(d);
-    }
-
-    function addPass(r="", v="") {
-        const d = document.createElement('div');
-        d.style.display = "flex"; d.style.gap = "5px"; d.style.marginBottom = "5px";
-        d.innerHTML = `<input type="text" placeholder="Rota" class="pRota" value="${r}"><input type="number" placeholder="R$" class="pVal" style="width:80px" value="${v}"><button onclick="this.parentElement.remove(); salvarDados()" style="width:40px;margin:0;background:#ef4444;color:#fff">X</button>`;
-        document.getElementById('listaPass').appendChild(d);
-    }
-
-    function gerar() {
+function gerar() {
         const nV = document.getElementById('numV').value;
+        const dIni = document.getElementById('dIni').value;
+        const dFim = document.getElementById('dFim').value;
         const cx = (parseFloat(document.getElementById('caixas').value) || 0) * 50;
         
+        // Função para formatar números para Real (R$ 1.234,56)
+        const fMoeda = (valor) => {
+            return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        };
+
+        // Função para formatar data (DD/MM/AA)
+        const formatarData = (data) => {
+            if(!data) return "--/--/--";
+            const [ano, mes, dia] = data.split('-');
+            return `${dia}/${mes}/${ano.slice(-2)}`;
+        };
+
         let tNotas = 0, tComis = 0, txtC = "";
         const cl = document.getElementsByClassName('nCliente'), vl = document.getElementsByClassName('notaReal'), pc = document.getElementsByClassName('notaPerc');
         
         for(let i=0; i<cl.length; i++) {
             let v = parseFloat(vl[i].value) || 0, p = parseFloat(pc[i].value) || 0;
             if(v > 0) {
-                tNotas += v; tComis += (v * p / 100);
-                txtC += "▪️ " + (cl[i].value || "Cli") + ": R$ " + v.toFixed(2) + "\n";
+                tNotas += v; 
+                tComis += (v * p / 100);
+                // Adicionado o (p%) na linha abaixo
+                txtC += "▪️ " + (cl[i].value || "Cli") + " (" + p + "%): " + fMoeda(v) + "\n";
             }
         }
 
         let tG = 0, txtG = "";
-        for(let g in gastos) { if(gastos[g]>0) { tG += gastos[g]; txtG += "• " + g + ": R$ " + gastos[g].toFixed(2) + "\n"; } }
+        for(let g in gastos) { 
+            if(gastos[g]>0) { 
+                tG += gastos[g]; 
+                txtG += "• " + g + ": " + fMoeda(gastos[g]) + "\n"; 
+            } 
+        }
         
         const pr = document.getElementsByClassName('pRota'), pv = document.getElementsByClassName('pVal');
         for(let i=0; i<pr.length; i++) {
             let v = parseFloat(pv[i].value) || 0;
-            if(v > 0) { tG += v; txtG += "• Passagem " + pr[i].value + ": R$ " + v.toFixed(2) + "\n"; }
+            if(v > 0) { tG += v; txtG += "• Passagem " + pr[i].value + ": " + fMoeda(v) + "\n"; }
         }
 
         const liq = (tComis + cx) - tG;
         const rec = tNotas + tComis + cx;
 
-        const res = "*RELATÓRIO Nº " + nV + "*\n\n*NOTAS:*\n" + txtC + "Total Notas: R$ " + tNotas.toFixed(2) + "\nTotal Comis: R$ " + tComis.toFixed(2) + "\n\n*DESPESAS:*\n" + txtG + "Total Gastos: R$ " + tG.toFixed(2) + "\n\n*RESUMO:*\n• Caixas: R$ " + cx.toFixed(2) + "\n• Lucro Líquido: R$ " + liq.toFixed(2) + "\n\n*TOTAL A RECEBER: R$ " + rec.toFixed(2) + "*";
+        // --- MONTAGEM DO TEXTO ---
+        let res = "📊 *RELATÓRIO DE VIAGEM PRO*\n";
+        res += "🗓️ Período: " + formatarData(dIni) + " a " + formatarData(dFim) + "\n";
+        res += "🔢 Viagem Nº: " + nV + "\n\n";
+        
+        res += "*NOTAS:*\n" + txtC;
+        res += "Total Notas: " + fMoeda(tNotas) + "\n";
+        res += "Total Comis: " + fMoeda(tComis) + "\n\n";
+        
+        res += "*DESPESAS:*\n" + txtG;
+        res += "Total Gastos: " + fMoeda(tG) + "\n\n";
+        
+        res += "*RESUMO:*\n";
+        res += "• Caixas: " + fMoeda(cx) + "\n";
+        res += "• Lucro Líquido: " + fMoeda(liq) + "\n\n";
+        
+        res += "*TOTAL A RECEBER: " + fMoeda(rec) + "*";
         
         document.getElementById('resumo').innerText = res;
         document.getElementById('resumo').style.display = "block";
         document.getElementById('btnCopiar').style.display = "block";
         window.scrollTo(0, document.body.scrollHeight);
     }
-
-    function copiar() {
-        const t = document.getElementById('resumo').innerText;
-        const i = document.createElement('textarea');
-        i.value = t; document.body.appendChild(i); i.select();
-        document.execCommand('copy'); document.body.removeChild(i);
-        alert("Copiado com sucesso!");
-    }
-
-    function limpar() {
-        if(confirm("Deseja realmente apagar tudo e começar do zero?")) {
-            localStorage.removeItem('dadosRelatorio');
-            location.reload();
-        }
-    }
-
-    // Inicialização
-    window.onload = carregarDados;
-
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js');
-        });
-    }
-</script>
-</body>
-</html>
