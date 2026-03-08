@@ -1,122 +1,312 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório Viagem Pro</title>
-    <style>
-        :root { --p: #0f172a; --s: #10b981; --a: #3b82f6; --bg: #f8fafc; }
-        body { font-family: sans-serif; background: var(--bg); padding: 10px; color: #1e293b; }
-        .card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        h2 { text-align: center; color: var(--p); margin-bottom: 10px; }
-        .secao { font-size: 11px; text-transform: uppercase; color: #64748b; margin: 15px 0 5px; border-bottom: 1px solid #e2e8f0; font-weight: bold; }
-        label { font-size: 11px; font-weight: bold; display: block; margin-top: 8px; }
-        input, select { width: 100%; padding: 10px; margin: 4px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .item { background: #f1f5f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--s); position: relative; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 8px; transition: 0.2s; }
-        .btn-add { background: #e2e8f0; color: #334155; font-size: 12px; }
-        .btn-gerar { background: var(--p); color: #fff; margin-top: 20px; }
-        .btn-limpar { background: #94a3b8; color: #fff; font-size: 12px; }
-        .btn-copiar { background: var(--a); color: #fff; display: none; }
-        .btn-remove { background: #ef4444; color: #fff; width: auto; padding: 5px 10px; font-size: 10px; position: absolute; right: 5px; top: 5px; border-radius: 5px;}
-        #resumo { background: #1e293b; color: #fff; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; white-space: pre-wrap; font-family: monospace; font-size: 13px; border-left: 4px solid var(--a); line-height: 1.5; }
-    </style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Relatório de Viagem</title>
+
+<link rel="manifest" href="manifest.json">
+
+<meta name="theme-color" content="#0f172a">
+
+<style>
+
+:root{
+--p:#0f172a;
+--s:#10b981;
+--a:#3b82f6;
+--bg:#f1f5f9;
+}
+
+body{
+font-family:Arial;
+background:var(--bg);
+padding:15px;
+}
+
+.card{
+background:white;
+max-width:520px;
+margin:auto;
+padding:20px;
+border-radius:12px;
+box-shadow:0 8px 18px rgba(0,0,0,0.1);
+}
+
+h2{
+text-align:center;
+}
+
+.secao{
+font-size:11px;
+text-transform:uppercase;
+color:#64748b;
+margin:15px 0 5px;
+border-bottom:1px solid #e2e8f0;
+font-weight:bold;
+}
+
+input{
+width:100%;
+padding:10px;
+margin-top:4px;
+border-radius:8px;
+border:1px solid #cbd5e1;
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px;
+}
+
+.item{
+background:#f8fafc;
+padding:10px;
+border-radius:8px;
+margin-bottom:8px;
+border-left:4px solid var(--s);
+position:relative;
+}
+
+.btn-remove{
+position:absolute;
+right:6px;
+top:6px;
+background:#ef4444;
+border:none;
+color:white;
+padding:4px 7px;
+border-radius:4px;
+cursor:pointer;
+}
+
+button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:8px;
+font-weight:bold;
+cursor:pointer;
+margin-top:8px;
+}
+
+.btn-add{background:#e2e8f0;}
+.btn-gerar{background:var(--p);color:white;}
+.btn-copy{background:var(--a);color:white;display:none;}
+.btn-limpar{background:#94a3b8;color:white;}
+
+#total{
+font-weight:bold;
+font-size:16px;
+text-align:right;
+margin-top:10px;
+}
+
+#resumo{
+background:#1e293b;
+color:white;
+padding:15px;
+border-radius:8px;
+margin-top:15px;
+display:none;
+white-space:pre-wrap;
+font-family:monospace;
+}
+
+</style>
+
 </head>
+
 <body>
 
 <div class="card">
-    <h2>📊 Relatório de Viagem</h2>
-    
-    <div class="secao">Informações</div>
-    <div class="grid">
-        <div><label>Início</label><input type="date" id="dIni"></div>
-        <div><label>Fim</label><input type="date" id="dFim"></div>
-    </div>
-    <label>Destino/Motivo</label>
-    <input type="text" id="destino" placeholder="Ex: Compras Paraguai">
 
-    <div class="secao">Despesas</div>
-    <div id="listaDespesas"></div>
-    <button class="btn-add" onclick="addDespesa()">+ Adicionar Despesa</button>
+<h2>📊 Relatório de Viagem</h2>
 
-    <button class="btn-gerar" onclick="gerarRelatorio()">📋 Gerar Relatório Completo</button>
-    <button class="btn-copiar" id="btnCopiar" onclick="copiarTexto()">🔗 Copiar para WhatsApp</button>
-    <button class="btn-limpar" onclick="limparTudo()">🗑️ Limpar Dados</button>
+<div class="secao">Informações</div>
 
-    <div id="resumo"></div>
+<div class="grid">
+
+<div>
+<label>Início</label>
+<input type="date" id="dIni">
+</div>
+
+<div>
+<label>Fim</label>
+<input type="date" id="dFim">
+</div>
+
+</div>
+
+<label>Destino</label>
+<input type="text" id="destino">
+
+<div class="secao">Despesas</div>
+
+<div id="listaDespesas"></div>
+
+<button class="btn-add" onclick="addDespesa()">+ Adicionar</button>
+
+<div id="total">Total: R$ 0,00</div>
+
+<button class="btn-gerar" onclick="gerarRelatorio()">Gerar Relatório</button>
+
+<button class="btn-copy" id="btnCopiar" onclick="enviarWhats()">Enviar WhatsApp</button>
+
+<button class="btn-limpar" onclick="limpar()">Limpar</button>
+
+<div id="resumo"></div>
+
 </div>
 
 <script>
-    // Variável global para garantir que o texto copiado seja igual ao gerado
-    let relatorioGerado = "";
 
-    const fMoeda = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
-    const fData = (d) => d ? d.split('-').reverse().join('/') : '--/--/----';
+let relatorioGerado=""
 
-    function addDespesa(desc = '', valor = '') {
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.innerHTML = `
-            <button class="btn-remove" onclick="this.parentElement.remove()">X</button>
-            <label>Descrição</label>
-            <input type="text" class="desc" value="${desc}" placeholder="Ex: Combustível">
-            <label>Valor (R$)</label>
-            <input type="text" class="val" value="${valor}" placeholder="0,00" oninput="this.value = this.value.replace(',', '.')">
-        `;
-        document.getElementById('listaDespesas').appendChild(div);
-    }
+function fMoeda(v){
+return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v)
+}
 
-    function gerarRelatorio() {
-        const dIni = fData(document.getElementById('dIni').value);
-        const dFim = fData(document.getElementById('dFim').value);
-        const destino = document.getElementById('destino').value.toUpperCase() || "NÃO INFORMADO";
-        
-        const descricoes = document.querySelectorAll('.desc');
-        const valores = document.querySelectorAll('.val');
-        
-        let total = 0;
-        let itensTexto = "";
+function fData(d){
+if(!d)return "--/--/----"
+return d.split('-').reverse().join('/')
+}
 
-        descricoes.forEach((d, i) => {
-            // Substitui vírgula por ponto para garantir o float correto
-            const valorInput = valores[i].value.replace(',', '.');
-            const v = parseFloat(valorInput) || 0;
-            if (d.value) {
-                total += v;
-                itensTexto += `🔹 ${d.value}: ${fMoeda(v)}\n`;
-            }
-        });
+function moedaNumero(v){
+v=v.replace(/\./g,'').replace(',','.')
+return parseFloat(v)||0
+}
 
-        const cabecalho = `📌 *RELATÓRIO DE VIAGEM*\n`;
-        const info = `━━━━━━━━━━━━━━━━━━\n🗓️ PERÍODO: ${dIni} a ${dFim}\n📍 DESTINO: ${destino}\n━━━━━━━━━━━━━━━━━━\n\n💰 *DETALHAMENTO:* \n${itensTexto}`;
-        const rodape = `\n━━━━━━━━━━━━━━━━━━\n💵 *TOTAL GERAL: ${fMoeda(total)}*`;
+function mascara(input){
 
-        // Salva na variável global e exibe
-        relatorioGerado = cabecalho + info + rodape;
-        
-        const resDiv = document.getElementById('resumo');
-        resDiv.innerText = relatorioGerado;
-        resDiv.style.display = 'block';
-        document.getElementById('btnCopiar').style.display = 'block';
-        
-        window.scrollTo(0, document.body.scrollHeight);
-    }
+let v=input.value.replace(/\D/g,'')
 
-    function copiarTexto() {
-        // Copia a variável global, não o elemento HTML
-        navigator.clipboard.writeText(relatorioGerado).then(() => {
-            alert("✅ Relatório copiado com sucesso!");
-        });
-    }
+v=(v/100).toFixed(2)+''
 
-    function limparTudo() {
-        if(confirm("Deseja limpar todos os campos?")) {
-            location.reload();
-        }
-    }
+v=v.replace(".",",")
 
-    addDespesa();
+v=v.replace(/\B(?=(\d{3})+(?!\d))/g,".")
+
+input.value=v
+
+salvar()
+
+}
+
+function addDespesa(desc='',valor=''){
+
+let div=document.createElement("div")
+div.className="item"
+
+div.innerHTML=`
+
+<button class="btn-remove" onclick="remover(this)">X</button>
+
+<label>Descrição</label>
+<input class="desc" value="${desc}">
+
+<label>Valor</label>
+<input class="val" value="${valor}">
+
+`
+
+document.getElementById("listaDespesas").appendChild(div)
+
+div.querySelector(".val").addEventListener("input",function(){
+mascara(this)
+})
+
+}
+
+function remover(btn){
+
+btn.parentElement.remove()
+salvar()
+
+}
+
+function gerarRelatorio(){
+
+let dIni=fData(dIni.value)
+let dFim=fData(dFim.value)
+let destino=document.getElementById("destino").value.toUpperCase()
+
+let desc=document.querySelectorAll(".desc")
+let val=document.querySelectorAll(".val")
+
+let total=0
+let itens=""
+
+desc.forEach((d,i)=>{
+
+let v=moedaNumero(val[i].value)
+
+if(d.value){
+
+total+=v
+
+itens+=`🔹 ${d.value}: ${fMoeda(v)}\n`
+
+}
+
+})
+
+relatorioGerado=
+
+`📌 RELATÓRIO DE VIAGEM
+
+🗓️ ${dIni} a ${dFim}
+📍 ${destino}
+
+${itens}
+
+💵 TOTAL: ${fMoeda(total)}
+`
+
+resumo.innerText=relatorioGerado
+resumo.style.display="block"
+
+btnCopiar.style.display="block"
+
+}
+
+function enviarWhats(){
+
+let url="https://wa.me/?text="+encodeURIComponent(relatorioGerado)
+
+window.open(url)
+
+}
+
+function limpar(){
+
+if(confirm("Limpar dados?")){
+
+localStorage.clear()
+location.reload()
+
+}
+
+}
+
+function salvar(){
+
+localStorage.setItem("dados",document.body.innerHTML)
+
+}
+
+addDespesa()
+
+if('serviceWorker' in navigator){
+
+navigator.serviceWorker.register('sw.js')
+
+}
+
 </script>
 
 </body>
