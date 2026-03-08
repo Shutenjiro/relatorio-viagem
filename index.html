@@ -122,3 +122,34 @@
         
         texto += `*💰 NOTAS/COMISSÕES:*\n`;
         dados.notas.forEach(n => {
+            let com = n.valor * (n.comissao/100);
+            texto += `• ${n.cliente}: ${formatarMoeda(n.valor)} (${n.comissao}% = ${formatarMoeda(com)})\n`;
+        });
+
+        texto += `\n*💸 DESPESAS:*\n`;
+        dados.gastos.forEach(g => {
+            texto += `• ${g.tipo}: ${formatarMoeda(g.valor)}\n`;
+        });
+
+        let tc = dados.notas.reduce((acc, n) => acc + (n.valor * (n.comissao/100)), 0);
+        let tg = dados.gastos.reduce((acc, g) => acc + g.valor, 0);
+        
+        texto += `\n---------------------------\n`;
+        texto += `*💵 TOTAL COMISSÃO:* ${formatarMoeda(tc)}\n`;
+        texto += `*📉 TOTAL GASTOS:* ${formatarMoeda(tg)}\n`;
+        texto += `*⚖️ SALDO LÍQUIDO: ${formatarMoeda(tc - tg)}*`;
+
+        window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+    }
+
+    function limparDados() {
+        if(confirm("Zerar tudo?")) {
+            dados = { titulo: '', notas: [], gastos: [] };
+            document.getElementById('tituloViagem').value = '';
+            atualizarTela();
+        }
+    }
+    atualizarTela();
+</script>
+</body>
+</html>
