@@ -11,16 +11,16 @@
         h2 { text-align: center; color: var(--p); margin-bottom: 10px; }
         .secao { font-size: 11px; text-transform: uppercase; color: #64748b; margin: 15px 0 5px; border-bottom: 1px solid #e2e8f0; font-weight: bold; }
         label { font-size: 11px; font-weight: bold; display: block; margin-top: 8px; }
-        input, select { width: 100%; padding: 12px; margin: 4px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; margin: 4px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .item { background: #f1f5f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--s); position: relative; }
         button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 8px; transition: 0.2s; }
         .btn-add { background: #e2e8f0; color: #334155; font-size: 12px; }
         .btn-gerar { background: var(--p); color: #fff; margin-top: 20px; }
         .btn-limpar { background: #94a3b8; color: #fff; font-size: 12px; }
-        .btn-copiar { background: var(--s); color: #fff; display: none; }
+        .btn-copiar { background: var(--a); color: #fff; display: none; }
         .btn-remove { background: #ef4444; color: #fff; width: auto; padding: 5px 10px; font-size: 10px; position: absolute; right: 5px; top: 5px; border-radius: 5px;}
-        #resumo { background: #1e293b; color: #fff; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; white-space: pre-wrap; font-family: monospace; font-size: 14px; border-left: 4px solid var(--a); line-height: 1.5; }
+        #resumo { background: #1e293b; color: #fff; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; white-space: pre-wrap; font-family: monospace; font-size: 13px; border-left: 4px solid var(--a); line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -34,38 +34,25 @@
         <div><label>Fim</label><input type="date" id="dFim"></div>
     </div>
     <label>Destino/Motivo</label>
-    <input type="text" id="destino" placeholder="Ex: COMPRAS PARAGUAI">
+    <input type="text" id="destino" placeholder="Ex: Compras Paraguai">
 
     <div class="secao">Despesas</div>
     <div id="listaDespesas"></div>
     <button class="btn-add" onclick="addDespesa()">+ Adicionar Despesa</button>
 
     <button class="btn-gerar" onclick="gerarRelatorio()">📋 Gerar Relatório Completo</button>
-    <button class="btn-copiar" id="btnCopiar" onclick="copiarTexto()">🟢 Copiar para WhatsApp</button>
+    <button class="btn-copiar" id="btnCopiar" onclick="copiarTexto()">🔗 Copiar para WhatsApp</button>
     <button class="btn-limpar" onclick="limparTudo()">🗑️ Limpar Dados</button>
 
     <div id="resumo"></div>
 </div>
 
 <script>
-    // Variável global para armazenar o texto puro (com emojis e formatação)
-    let textoFinalRelatorio = "";
+    // Variável global para garantir que o texto copiado seja igual ao gerado
+    let relatorioGerado = "";
 
-    // Formata número para Moeda Brasileira R$ 0,00 com ponto e vírgula corretos
-    const fMoeda = (v) => {
-        return new Intl.NumberFormat('pt-BR', { 
-            style: 'currency', 
-            currency: 'BRL',
-            minimumFractionDigits: 2 
-        }).format(v || 0);
-    };
-
-    // Formata data para BR dd/mm/aaaa
-    const fData = (d) => {
-        if (!d) return '--/--/----';
-        const [ano, mes, dia] = d.split('-');
-        return `${dia}/${mes}/${ano}`;
-    };
+    const fMoeda = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+    const fData = (d) => d ? d.split('-').reverse().join('/') : '--/--/----';
 
     function addDespesa(desc = '', valor = '') {
         const div = document.createElement('div');
@@ -75,7 +62,7 @@
             <label>Descrição</label>
             <input type="text" class="desc" value="${desc}" placeholder="Ex: Combustível">
             <label>Valor (R$)</label>
-            <input type="number" step="0.01" class="val" value="${valor}" placeholder="0,00">
+            <input type="text" class="val" value="${valor}" placeholder="0,00" oninput="this.value = this.value.replace(',', '.')">
         `;
         document.getElementById('listaDespesas').appendChild(div);
     }
@@ -92,23 +79,24 @@
         let itensTexto = "";
 
         descricoes.forEach((d, i) => {
-            const v = parseFloat(valores[i].value) || 0;
-            if (d.value.trim() !== "") {
+            // Substitui vírgula por ponto para garantir o float correto
+            const valorInput = valores[i].value.replace(',', '.');
+            const v = parseFloat(valorInput) || 0;
+            if (d.value) {
                 total += v;
-                itensTexto += `🔹 *${d.value.trim()}*: ${fMoeda(v)}\n`;
+                itensTexto += `🔹 ${d.value}: ${fMoeda(v)}\n`;
             }
         });
 
-        // Construção do texto com emojis e formatação de negrito do WhatsApp (*)
         const cabecalho = `📌 *RELATÓRIO DE VIAGEM*\n`;
-        const divisor = `━━━━━━━━━━━━━━━━━━\n`;
-        const info = `${divisor}🗓️ *PERÍODO:* ${dIni} a ${dFim}\n📍 *DESTINO:* ${destino}\n${divisor}\n💰 *DETALHAMENTO:* \n${itensTexto}`;
-        const rodape = `\n${divisor}💵 *TOTAL GERAL: ${fMoeda(total)}*`;
+        const info = `━━━━━━━━━━━━━━━━━━\n🗓️ PERÍODO: ${dIni} a ${dFim}\n📍 DESTINO: ${destino}\n━━━━━━━━━━━━━━━━━━\n\n💰 *DETALHAMENTO:* \n${itensTexto}`;
+        const rodape = `\n━━━━━━━━━━━━━━━━━━\n💵 *TOTAL GERAL: ${fMoeda(total)}*`;
 
-        textoFinalRelatorio = cabecalho + info + rodape;
+        // Salva na variável global e exibe
+        relatorioGerado = cabecalho + info + rodape;
         
         const resDiv = document.getElementById('resumo');
-        resDiv.textContent = textoFinalRelatorio; // Usa textContent para preservar emojis e quebras
+        resDiv.innerText = relatorioGerado;
         resDiv.style.display = 'block';
         document.getElementById('btnCopiar').style.display = 'block';
         
@@ -116,33 +104,10 @@
     }
 
     function copiarTexto() {
-        if (!textoFinalRelatorio) return;
-
-        // Tenta usar a API moderna de clipboard
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(textoFinalRelatorio).then(() => {
-                alert("✅ Relatório formatado e copiado com sucesso!");
-            }).catch(err => {
-                fallbackCopyText(textoFinalRelatorio);
-            });
-        } else {
-            fallbackCopyText(textoFinalRelatorio);
-        }
-    }
-
-    // Método reserva caso o navegador bloqueie a API de clipboard
-    function fallbackCopyText(text) {
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-            document.execCommand('copy');
-            alert("✅ Relatório copiado (modo fallback)!");
-        } catch (err) {
-            alert("❌ Erro ao copiar texto.");
-        }
-        document.body.removeChild(textArea);
+        // Copia a variável global, não o elemento HTML
+        navigator.clipboard.writeText(relatorioGerado).then(() => {
+            alert("✅ Relatório copiado com sucesso!");
+        });
     }
 
     function limparTudo() {
@@ -151,7 +116,6 @@
         }
     }
 
-    // Inicia com um campo de despesa
     addDespesa();
 </script>
 
