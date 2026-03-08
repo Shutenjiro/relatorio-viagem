@@ -32,51 +32,51 @@
         <h3>📅 Identificação</h3>
         <input type="number" id="numViagem" placeholder="Número da Viagem">
         <div class="grid">
-            <div>
-                <label style="font-size: 0.8rem;">Início:</label>
-                <input type="date" id="dataInicio">
-            </div>
-            <div>
-                <label style="font-size: 0.8rem;">Fim:</label>
-                <input type="date" id="dataFim">
-            </div>
+            <div><label style="font-size: 0.7rem;">Início:</label><input type="date" id="dataInicio"></div>
+            <div><label style="font-size: 0.7rem;">Fim:</label><input type="date" id="dataFim"></div>
         </div>
     </div>
 
     <div class="section">
         <h3>📦 Caixas</h3>
-        <input type="number" id="qtdCaixas" placeholder="Quantidade de Caixas (R$ 50,00 cada)" oninput="atualizarTela()">
+        <input type="number" id="qtdCaixas" placeholder="Quantidade de Caixas" oninput="atualizarTela()">
     </div>
 
     <div class="section">
         <h3>💰 Lançar Notas</h3>
         <input type="text" id="cliente" placeholder="Nome do Cliente">
         <div class="grid">
-            <input type="text" id="valorNota" placeholder="Valor (ex: 30.000,50)" inputmode="decimal">
-            <input type="text" id="comissao" placeholder="Comiss. % (ex: 10)" inputmode="decimal">
+            <input type="text" id="valorNota" placeholder="Valor" inputmode="decimal">
+            <input type="text" id="comissao" placeholder="Comiss. %" inputmode="decimal">
         </div>
         <button onclick="adicionarNota()" class="btn-save">➕ Adicionar Nota</button>
     </div>
 
     <div class="section">
-        <h3>⛽ Despesas</h3>
+        <h3>🎟️ Passagens</h3>
+        <input type="text" id="descPassagem" placeholder="Descrição (Ex: Londrina/SP)">
+        <input type="text" id="valorPassagem" placeholder="Valor da Passagem" inputmode="decimal">
+        <button onclick="adicionarPassagem()" style="background: #9b59b6;">🎟️ Adicionar Passagem</button>
+    </div>
+
+    <div class="section">
+        <h3>⛽ Outras Despesas</h3>
         <select id="tipoGasto">
-            <option value="Transporte">🚗 Transporte / Combustível</option>
+            <option value="Transporte">🚗 Combustível/Táxi</option>
             <option value="Alimentação">🍴 Alimentação</option>
             <option value="Hospedagem">🏨 Hospedagem</option>
             <option value="Banheiro">🧻 Banheiro</option>
             <option value="Outros">⚙️ Outros</option>
         </select>
-        <input type="text" id="valorGasto" placeholder="Valor Gasto (R$)" inputmode="decimal">
+        <input type="text" id="valorGasto" placeholder="Valor Gasto" inputmode="decimal">
         <button onclick="adicionarGasto()">💸 Registrar Gasto</button>
     </div>
 
     <div class="summary">
         <p>Notas: <span id="totalNotas">R$ 0,00</span></p>
         <p>Comissões: <span id="totalComissao">R$ 0,00</span></p>
-        <p>Total Caixas: <span id="totalValorCaixas">R$ 0,00</span></p>
-        <p>Despesas: <span id="totalGastos">R$ 0,00</span></p>
-        <hr>
+        <p>Caixas: <span id="totalValorCaixas">R$ 0,00</span></p>
+        <p>Gastos (Passagens + Despesas): <span id="totalGastos">R$ 0,00</span></p>
         <p class="total-destaque"><strong>Saldo Líquido:</strong> <strong id="saldoFinal">R$ 0,00</strong></p>
     </div>
     
@@ -87,7 +87,7 @@
 <div id="toast" class="toast">Copiado com sucesso! ✅</div>
 
 <script>
-    let dados = JSON.parse(localStorage.getItem('relatorio_v7')) || { info: {num: '', inicio: '', fim: '', caixas: 0}, notas: [], gastos: [] };
+    let dados = JSON.parse(localStorage.getItem('relatorio_v8')) || { info: {num: '', inicio: '', fim: '', caixas: 0}, notas: [], passagens: [], gastos: [] };
     
     document.getElementById('numViagem').value = dados.info.num || '';
     document.getElementById('dataInicio').value = dados.info.inicio || '';
@@ -107,44 +107,44 @@
     function atualizarTela() {
         let tNotas = dados.notas.reduce((acc, n) => acc + n.valor, 0);
         let tComissao = dados.notas.reduce((acc, n) => acc + (n.valor * (n.comissao/100)), 0);
+        let tPassagens = dados.passagens.reduce((acc, p) => acc + p.valor, 0);
         let tGastos = dados.gastos.reduce((acc, g) => acc + g.valor, 0);
         
         let qtdCaixas = parseInt(document.getElementById('qtdCaixas').value) || 0;
-        let valorTotalCaixas = qtdCaixas * 50;
+        let valC = qtdCaixas * 50;
 
         document.getElementById('totalNotas').innerText = formatarMoeda(tNotas);
         document.getElementById('totalComissao').innerText = formatarMoeda(tComissao);
-        document.getElementById('totalValorCaixas').innerText = formatarMoeda(valorTotalCaixas);
-        document.getElementById('totalGastos').innerText = formatarMoeda(tGastos);
+        document.getElementById('totalValorCaixas').innerText = formatarMoeda(valC);
+        document.getElementById('totalGastos').innerText = formatarMoeda(tPassagens + tGastos);
+        document.getElementById('saldoFinal').innerText = formatarMoeda((tComissao + valC) - (tPassagens + tGastos));
         
-        // O Saldo Final agora soma as comissões + o valor das caixas e subtrai os gastos
-        document.getElementById('saldoFinal').innerText = formatarMoeda((tComissao + valorTotalCaixas) - tGastos);
-        
-        dados.info.num = document.getElementById('numViagem').value;
-        dados.info.inicio = document.getElementById('dataInicio').value;
-        dados.info.fim = document.getElementById('dataFim').value;
-        dados.info.caixas = qtdCaixas;
-        
-        localStorage.setItem('relatorio_v7', JSON.stringify(dados));
+        dados.info = { num: document.getElementById('numViagem').value, inicio: document.getElementById('dataInicio').value, fim: document.getElementById('dataFim').value, caixas: qtdCaixas };
+        localStorage.setItem('relatorio_v8', JSON.stringify(dados));
     }
 
     function adicionarNota() {
-        const cliente = document.getElementById('cliente').value || "Cliente";
-        const valor = limparMoeda(document.getElementById('valorNota').value);
-        const comissao = limparMoeda(document.getElementById('comissao').value);
-        if(valor > 0) {
-            dados.notas.push({ cliente, valor, comissao });
+        const v = limparMoeda(document.getElementById('valorNota').value);
+        if(v > 0) {
+            dados.notas.push({ cliente: document.getElementById('cliente').value || "Cli", valor: v, comissao: limparMoeda(document.getElementById('comissao').value) });
             atualizarTela();
-            document.getElementById('cliente').value = '';
-            document.getElementById('valorNota').value = '';
+            document.getElementById('cliente').value = ''; document.getElementById('valorNota').value = '';
+        }
+    }
+
+    function adicionarPassagem() {
+        const v = limparMoeda(document.getElementById('valorPassagem').value);
+        if(v > 0) {
+            dados.passagens.push({ desc: document.getElementById('descPassagem').value || "Passagem", valor: v });
+            atualizarTela();
+            document.getElementById('descPassagem').value = ''; document.getElementById('valorPassagem').value = '';
         }
     }
 
     function adicionarGasto() {
-        const tipo = document.getElementById('tipoGasto').value;
-        const valor = limparMoeda(document.getElementById('valorGasto').value);
-        if(valor > 0) {
-            dados.gastos.push({ tipo, valor });
+        const v = limparMoeda(document.getElementById('valorGasto').value);
+        if(v > 0) {
+            dados.gastos.push({ tipo: document.getElementById('tipoGasto').value, valor: v });
             atualizarTela();
             document.getElementById('valorGasto').value = '';
         }
@@ -157,58 +157,43 @@
     }
 
     function copiarRelatorio() {
-        const num = document.getElementById('numViagem').value || "S/N";
-        const inicio = formatarDataBR(document.getElementById('dataInicio').value);
-        const fim = formatarDataBR(document.getElementById('dataFim').value);
-        const qtdC = dados.info.caixas || 0;
-        const valC = qtdC * 50;
-        
-        let texto = `*🚚 RELATÓRIO DE VIAGEM Nº ${num}*\n`;
-        texto += `📅 Período: ${inicio} até ${fim}\n\n`;
-        
-        texto += `*📦 CAIXAS:* ${qtdC} un. (${formatarMoeda(valC)})\n\n`;
+        const info = dados.info;
+        const valC = info.caixas * 50;
+        let texto = `*🚚 RELATÓRIO Nº ${info.num || 'S/N'}*\n📅 ${formatarDataBR(info.inicio)} até ${formatarDataBR(info.fim)}\n\n`;
+        texto += `*📦 CAIXAS:* ${info.caixas} un. (${formatarMoeda(valC)})\n\n`;
 
         texto += `*💰 NOTAS/COMISSÕES:*\n`;
-        dados.notas.forEach(n => {
-            let com = n.valor * (n.comissao/100);
-            texto += `• ${n.cliente}: ${formatarMoeda(n.valor)} (${n.comissao}% = ${formatarMoeda(com)})\n`;
-        });
+        dados.notas.forEach(n => texto += `• ${n.cliente}: ${formatarMoeda(n.valor)} (${n.comissao}% = ${formatarMoeda(n.valor * (n.comissao/100))})\n`);
 
-        texto += `\n*💸 DESPESAS:*\n`;
-        dados.gastos.forEach(g => {
-            texto += `• ${g.tipo}: ${formatarMoeda(g.valor)}\n`;
-        });
+        if(dados.passagens.length > 0) {
+            texto += `\n*🎟️ PASSAGENS:*\n`;
+            dados.passagens.forEach(p => texto += `• ${p.desc}: ${formatarMoeda(p.valor)}\n`);
+        }
 
-        let tc = dados.notas.reduce((acc, n) => acc + (n.valor * (n.comissao/100)), 0);
-        let tg = dados.gastos.reduce((acc, g) => acc + g.valor, 0);
+        texto += `\n*💸 OUTRAS DESPESAS:*\n`;
+        dados.gastos.forEach(g => texto += `• ${g.tipo}: ${formatarMoeda(g.valor)}\n`);
+
+        let tCom = dados.notas.reduce((acc, n) => acc + (n.valor * (n.comissao/100)), 0);
+        let tGas = dados.passagens.reduce((acc, p) => acc + p.valor, 0) + dados.gastos.reduce((acc, g) => acc + g.valor, 0);
         
         texto += `\n---------------------------\n`;
-        texto += `*💵 TOTAL COMISSÃO + CAIXAS:* ${formatarMoeda(tc + valC)}\n`;
-        texto += `*📉 TOTAL GASTOS:* ${formatarMoeda(tg)}\n`;
-        texto += `*⚖️ SALDO LÍQUIDO: ${formatarMoeda((tc + valC) - tg)}*`;
+        texto += `*💵 TOTAL LUCRO:* ${formatarMoeda(tCom + valC)}\n`;
+        texto += `*📉 TOTAL GASTOS:* ${formatarMoeda(tGas)}\n`;
+        texto += `*⚖️ SALDO LÍQUIDO: ${formatarMoeda((tCom + valC) - tGas)}*`;
 
         navigator.clipboard.writeText(texto).then(() => {
-            const toast = document.getElementById('toast');
-            toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 2000);
+            const t = document.getElementById('toast'); t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000);
         });
     }
 
     function limparDados() {
         if(confirm("Zerar tudo?")) {
-            dados = { info: {num: '', inicio: '', fim: '', caixas: 0}, notas: [], gastos: [] };
-            document.getElementById('numViagem').value = '';
-            document.getElementById('dataInicio').value = '';
-            document.getElementById('dataFim').value = '';
-            document.getElementById('qtdCaixas').value = '';
-            atualizarTela();
+            dados = { info: {num: '', inicio: '', fim: '', caixas: 0}, notas: [], passagens: [], gastos: [] };
+            location.reload();
         }
     }
-    
-    document.getElementById('numViagem').addEventListener('input', atualizarTela);
-    document.getElementById('dataInicio').addEventListener('input', atualizarTela);
-    document.getElementById('dataFim').addEventListener('input', atualizarTela);
 
+    document.querySelectorAll('#numViagem, #dataInicio, #dataFim').forEach(el => el.addEventListener('input', atualizarTela));
     atualizarTela();
 </script>
 </body>
