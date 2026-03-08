@@ -1,30 +1,34 @@
-const CACHE="relatorio-v1"
+const CACHE_NAME = 'relatorio-viagem-v4';
+const ASSETS = [
+  './',
+  './index.html',
+  './manifest.json'
+];
 
-self.addEventListener("install",e=>{
+// Instalação do Service Worker e cache dos arquivos
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(ASSETS))
+      .then(() => self.skipWaiting())
+  );
+});
 
-e.waitUntil(
+// Ativação e limpeza de caches antigos
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+      );
+    })
+  );
+});
 
-caches.open(CACHE).then(cache=>{
-return cache.addAll([
-"/",
-"index.html"
-])
-})
-
-)
-
-})
-
-self.addEventListener("fetch",e=>{
-
-e.respondWith(
-
-caches.match(e.request).then(res=>{
-
-return res || fetch(e.request)
-
-})
-
-)
-
-})
+// Responde com o cache quando estiver offline
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => response || fetch(event.request))
+  );
+});
