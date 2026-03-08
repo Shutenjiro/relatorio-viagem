@@ -11,14 +11,16 @@
         .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1 { color: var(--primary); text-align: center; font-size: 1.4rem; border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
         .section { margin-bottom: 20px; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #eee; }
+        h3 { font-size: 1rem; margin-top: 0; color: var(--primary); }
         input, select, button { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
         button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; }
         .btn-save { background: var(--accent); }
-        .btn-wpp { background: #25D366; margin-top: 10px; }
+        .btn-copy { background: #3498db; margin-top: 10px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .summary { background: #eef2f7; padding: 15px; border-radius: 8px; margin-top: 20px; }
         .summary p { margin: 8px 0; display: flex; justify-content: space-between; }
         .total-destaque { font-size: 1.1rem; color: #2c3e50; border-top: 1px solid #ccc; padding-top: 10px; }
+        .toast { display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 0.9rem; z-index: 1000; }
     </style>
 </head>
 <body>
@@ -27,7 +29,18 @@
     <h1>📝 Relatório de Viagem</h1>
 
     <div class="section">
-        <input type="text" id="tituloViagem" placeholder="Título da Viagem (Ex: SP/Londrina)">
+        <h3>📅 Identificação</h3>
+        <input type="number" id="numViagem" placeholder="Número da Viagem">
+        <div class="grid">
+            <div>
+                <label style="font-size: 0.8rem;">Início:</label>
+                <input type="date" id="dataInicio">
+            </div>
+            <div>
+                <label style="font-size: 0.8rem;">Fim:</label>
+                <input type="date" id="dataFim">
+            </div>
+        </div>
     </div>
 
     <div class="section">
@@ -46,6 +59,7 @@
             <option value="Transporte">🚗 Transporte / Combustível</option>
             <option value="Alimentação">🍴 Alimentação</option>
             <option value="Hospedagem">🏨 Hospedagem</option>
+            <option value="Banheiro">🧻 Banheiro</option>
             <option value="Outros">⚙️ Outros</option>
         </select>
         <input type="text" id="valorGasto" placeholder="Valor Gasto (R$)" inputmode="decimal">
@@ -59,22 +73,26 @@
         <p class="total-destaque"><strong>Saldo Líquido:</strong> <strong id="saldoFinal">R$ 0,00</strong></p>
     </div>
     
-    <button onclick="enviarWhatsApp()" class="btn-wpp">🟢 Enviar no WhatsApp</button>
+    <button onclick="copiarRelatorio()" class="btn-copy">📋 Copiar Relatório Completo</button>
     <button onclick="limparDados()" style="background:#e74c3c; margin-top:30px; font-size: 0.8rem;">🗑️ Limpar Tudo</button>
 </div>
 
-<script>
-    let dados = JSON.parse(localStorage.getItem('relatorio_v4')) || { titulo: '', notas: [], gastos: [] };
-    document.getElementById('tituloViagem').value = dados.titulo || '';
+<div id="toast" class="toast">Copiado com sucesso! ✅</div>
 
-    // Função para transformar "30.000,50" em número real (30000.50)
+<script>
+    let dados = JSON.parse(localStorage.getItem('relatorio_v6')) || { info: {num: '', inicio: '', fim: ''}, notas: [], gastos: [] };
+    
+    // Carrega campos de identificação
+    document.getElementById('numViagem').value = dados.info.num || '';
+    document.getElementById('dataInicio').value = dados.info.inicio || '';
+    document.getElementById('dataFim').value = dados.info.fim || '';
+
     function limparMoeda(valor) {
         if (!valor) return 0;
         let v = valor.replace(/\./g, '').replace(',', '.');
         return parseFloat(v) || 0;
     }
 
-    // Função para transformar número (30000.50) em "R$ 30.000,50"
     function formatarMoeda(valor) {
         return valor.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
     }
@@ -89,8 +107,12 @@
         document.getElementById('totalGastos').innerText = formatarMoeda(tGastos);
         document.getElementById('saldoFinal').innerText = formatarMoeda(tComissao - tGastos);
         
-        dados.titulo = document.getElementById('tituloViagem').value;
-        localStorage.setItem('relatorio_v4', JSON.stringify(dados));
+        // Salva metadados
+        dados.info.num = document.getElementById('numViagem').value;
+        dados.info.inicio = document.getElementById('dataInicio').value;
+        dados.info.fim = document.getElementById('dataFim').value;
+        
+        localStorage.setItem('relatorio_v6', JSON.stringify(dados));
     }
 
     function adicionarNota() {
@@ -115,10 +137,19 @@
         }
     }
 
-    function enviarWhatsApp() {
-        const data = new Date().toLocaleDateString('pt-br');
-        const titulo = document.getElementById('tituloViagem').value || "RELATÓRIO DE VIAGEM";
-        let texto = `*📊 ${titulo.toUpperCase()}*\n📅 Data: ${data}\n\n`;
+    function formatarDataBR(data) {
+        if(!data) return "--/--/--";
+        const [ano, mes, dia] = data.split('-');
+        return `${dia}/${mes}/${ano}`;
+    }
+
+    function copiarRelatorio() {
+        const num = document.getElementById('numViagem').value || "S/N";
+        const inicio = formatarDataBR(document.getElementById('dataInicio').value);
+        const fim = formatarDataBR(document.getElementById('dataFim').value);
+        
+        let texto = `*🚚 RELATÓRIO DE VIAGEM Nº ${num}*\n`;
+        texto += `📅 Período: ${inicio} até ${fim}\n\n`;
         
         texto += `*💰 NOTAS/COMISSÕES:*\n`;
         dados.notas.forEach(n => {
@@ -139,16 +170,28 @@
         texto += `*📉 TOTAL GASTOS:* ${formatarMoeda(tg)}\n`;
         texto += `*⚖️ SALDO LÍQUIDO: ${formatarMoeda(tc - tg)}*`;
 
-        window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+        navigator.clipboard.writeText(texto).then(() => {
+            const toast = document.getElementById('toast');
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2000);
+        });
     }
 
     function limparDados() {
         if(confirm("Zerar tudo?")) {
-            dados = { titulo: '', notas: [], gastos: [] };
-            document.getElementById('tituloViagem').value = '';
+            dados = { info: {num: '', inicio: '', fim: ''}, notas: [], gastos: [] };
+            document.getElementById('numViagem').value = '';
+            document.getElementById('dataInicio').value = '';
+            document.getElementById('dataFim').value = '';
             atualizarTela();
         }
     }
+    
+    // Escuta mudanças nos inputs de data e numero para salvar automático
+    document.getElementById('numViagem').addEventListener('input', atualizarTela);
+    document.getElementById('dataInicio').addEventListener('input', atualizarTela);
+    document.getElementById('dataFim').addEventListener('input', atualizarTela);
+
     atualizarTela();
 </script>
 </body>
