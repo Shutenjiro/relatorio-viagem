@@ -11,16 +11,16 @@
         h2 { text-align: center; color: var(--p); margin-bottom: 10px; }
         .secao { font-size: 11px; text-transform: uppercase; color: #64748b; margin: 15px 0 5px; border-bottom: 1px solid #e2e8f0; font-weight: bold; }
         label { font-size: 11px; font-weight: bold; display: block; margin-top: 8px; }
-        input, select { width: 100%; padding: 10px; margin: 4px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        input, select { width: 100%; padding: 12px; margin: 4px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .item { background: #f1f5f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--s); position: relative; }
         button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 8px; transition: 0.2s; }
         .btn-add { background: #e2e8f0; color: #334155; font-size: 12px; }
         .btn-gerar { background: var(--p); color: #fff; margin-top: 20px; }
         .btn-limpar { background: #94a3b8; color: #fff; font-size: 12px; }
-        .btn-copiar { background: var(--a); color: #fff; display: none; }
+        .btn-copiar { background: var(--s); color: #fff; display: none; }
         .btn-remove { background: #ef4444; color: #fff; width: auto; padding: 5px 10px; font-size: 10px; position: absolute; right: 5px; top: 5px; border-radius: 5px;}
-        #resumo { background: #1e293b; color: #fff; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; white-space: pre-wrap; font-family: monospace; font-size: 13px; border-left: 4px solid var(--a); line-height: 1.5; }
+        #resumo { background: #1e293b; color: #fff; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; white-space: pre-wrap; font-family: monospace; font-size: 14px; border-left: 4px solid var(--a); line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -34,25 +34,38 @@
         <div><label>Fim</label><input type="date" id="dFim"></div>
     </div>
     <label>Destino/Motivo</label>
-    <input type="text" id="destino" placeholder="Ex: Compras Paraguai">
+    <input type="text" id="destino" placeholder="Ex: COMPRAS PARAGUAI">
 
     <div class="secao">Despesas</div>
     <div id="listaDespesas"></div>
     <button class="btn-add" onclick="addDespesa()">+ Adicionar Despesa</button>
 
     <button class="btn-gerar" onclick="gerarRelatorio()">📋 Gerar Relatório Completo</button>
-    <button class="btn-copiar" id="btnCopiar" onclick="copiarTexto()">🔗 Copiar para WhatsApp</button>
+    <button class="btn-copiar" id="btnCopiar" onclick="copiarTexto()">🟢 Copiar para WhatsApp</button>
     <button class="btn-limpar" onclick="limparTudo()">🗑️ Limpar Dados</button>
 
     <div id="resumo"></div>
 </div>
 
 <script>
-    // Formata número para Moeda Brasileira R$ 0,00
-    const fMoeda = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+    // Variável global para armazenar o texto puro (com emojis e formatação)
+    let textoFinalRelatorio = "";
+
+    // Formata número para Moeda Brasileira R$ 0,00 com ponto e vírgula corretos
+    const fMoeda = (v) => {
+        return new Intl.NumberFormat('pt-BR', { 
+            style: 'currency', 
+            currency: 'BRL',
+            minimumFractionDigits: 2 
+        }).format(v || 0);
+    };
 
     // Formata data para BR dd/mm/aaaa
-    const fData = (d) => d ? d.split('-').reverse().join('/') : '--/--/----';
+    const fData = (d) => {
+        if (!d) return '--/--/----';
+        const [ano, mes, dia] = d.split('-');
+        return `${dia}/${mes}/${ano}`;
+    };
 
     function addDespesa(desc = '', valor = '') {
         const div = document.createElement('div');
@@ -80,20 +93,22 @@
 
         descricoes.forEach((d, i) => {
             const v = parseFloat(valores[i].value) || 0;
-            if (d.value) {
+            if (d.value.trim() !== "") {
                 total += v;
-                itensTexto += `🔹 ${d.value}: ${fMoeda(v)}\n`;
+                itensTexto += `🔹 *${d.value.trim()}*: ${fMoeda(v)}\n`;
             }
         });
 
+        // Construção do texto com emojis e formatação de negrito do WhatsApp (*)
         const cabecalho = `📌 *RELATÓRIO DE VIAGEM*\n`;
-        const info = `━━━━━━━━━━━━━━━━━━\n🗓️ PERÍODO: ${dIni} a ${dFim}\n📍 DESTINO: ${destino}\n━━━━━━━━━━━━━━━━━━\n\n💰 *DETALHAMENTO:* \n${itensTexto}`;
-        const rodape = `\n━━━━━━━━━━━━━━━━━━\n💵 *TOTAL GERAL: ${fMoeda(total)}*`;
+        const divisor = `━━━━━━━━━━━━━━━━━━\n`;
+        const info = `${divisor}🗓️ *PERÍODO:* ${dIni} a ${dFim}\n📍 *DESTINO:* ${destino}\n${divisor}\n💰 *DETALHAMENTO:* \n${itensTexto}`;
+        const rodape = `\n${divisor}💵 *TOTAL GERAL: ${fMoeda(total)}*`;
 
-        const resultadoFinal = cabecalho + info + rodape;
+        textoFinalRelatorio = cabecalho + info + rodape;
         
         const resDiv = document.getElementById('resumo');
-        resDiv.innerText = resultadoFinal;
+        resDiv.textContent = textoFinalRelatorio; // Usa textContent para preservar emojis e quebras
         resDiv.style.display = 'block';
         document.getElementById('btnCopiar').style.display = 'block';
         
@@ -101,10 +116,33 @@
     }
 
     function copiarTexto() {
-        const texto = document.getElementById('resumo').innerText;
-        navigator.clipboard.writeText(texto).then(() => {
-            alert("✅ Relatório copiado!");
-        });
+        if (!textoFinalRelatorio) return;
+
+        // Tenta usar a API moderna de clipboard
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(textoFinalRelatorio).then(() => {
+                alert("✅ Relatório formatado e copiado com sucesso!");
+            }).catch(err => {
+                fallbackCopyText(textoFinalRelatorio);
+            });
+        } else {
+            fallbackCopyText(textoFinalRelatorio);
+        }
+    }
+
+    // Método reserva caso o navegador bloqueie a API de clipboard
+    function fallbackCopyText(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            alert("✅ Relatório copiado (modo fallback)!");
+        } catch (err) {
+            alert("❌ Erro ao copiar texto.");
+        }
+        document.body.removeChild(textArea);
     }
 
     function limparTudo() {
@@ -113,7 +151,7 @@
         }
     }
 
-    // Adiciona uma linha de despesa ao abrir
+    // Inicia com um campo de despesa
     addDespesa();
 </script>
 
