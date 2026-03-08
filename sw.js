@@ -1,11 +1,10 @@
-const CACHE_NAME = 'relatorio-viagem-v4';
+const CACHE_NAME = 'relatorio-viagem-v6';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json'
 ];
 
-// Instalação do Service Worker e cache dos arquivos
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -14,7 +13,6 @@ self.addEventListener('install', event => {
   );
 });
 
-// Ativação e limpeza de caches antigos
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => {
@@ -25,7 +23,6 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Responde com o cache quando estiver offline
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
