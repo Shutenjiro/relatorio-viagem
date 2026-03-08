@@ -44,6 +44,11 @@
     </div>
 
     <div class="section">
+        <h3>📦 Caixas</h3>
+        <input type="number" id="qtdCaixas" placeholder="Quantidade de Caixas (R$ 50,00 cada)" oninput="atualizarTela()">
+    </div>
+
+    <div class="section">
         <h3>💰 Lançar Notas</h3>
         <input type="text" id="cliente" placeholder="Nome do Cliente">
         <div class="grid">
@@ -69,7 +74,9 @@
     <div class="summary">
         <p>Notas: <span id="totalNotas">R$ 0,00</span></p>
         <p>Comissões: <span id="totalComissao">R$ 0,00</span></p>
+        <p>Total Caixas: <span id="totalValorCaixas">R$ 0,00</span></p>
         <p>Despesas: <span id="totalGastos">R$ 0,00</span></p>
+        <hr>
         <p class="total-destaque"><strong>Saldo Líquido:</strong> <strong id="saldoFinal">R$ 0,00</strong></p>
     </div>
     
@@ -80,16 +87,16 @@
 <div id="toast" class="toast">Copiado com sucesso! ✅</div>
 
 <script>
-    let dados = JSON.parse(localStorage.getItem('relatorio_v6')) || { info: {num: '', inicio: '', fim: ''}, notas: [], gastos: [] };
+    let dados = JSON.parse(localStorage.getItem('relatorio_v7')) || { info: {num: '', inicio: '', fim: '', caixas: 0}, notas: [], gastos: [] };
     
-    // Carrega campos de identificação
     document.getElementById('numViagem').value = dados.info.num || '';
     document.getElementById('dataInicio').value = dados.info.inicio || '';
     document.getElementById('dataFim').value = dados.info.fim || '';
+    document.getElementById('qtdCaixas').value = dados.info.caixas || '';
 
     function limparMoeda(valor) {
         if (!valor) return 0;
-        let v = valor.replace(/\./g, '').replace(',', '.');
+        let v = valor.toString().replace(/\./g, '').replace(',', '.');
         return parseFloat(v) || 0;
     }
 
@@ -101,18 +108,24 @@
         let tNotas = dados.notas.reduce((acc, n) => acc + n.valor, 0);
         let tComissao = dados.notas.reduce((acc, n) => acc + (n.valor * (n.comissao/100)), 0);
         let tGastos = dados.gastos.reduce((acc, g) => acc + g.valor, 0);
+        
+        let qtdCaixas = parseInt(document.getElementById('qtdCaixas').value) || 0;
+        let valorTotalCaixas = qtdCaixas * 50;
 
         document.getElementById('totalNotas').innerText = formatarMoeda(tNotas);
         document.getElementById('totalComissao').innerText = formatarMoeda(tComissao);
+        document.getElementById('totalValorCaixas').innerText = formatarMoeda(valorTotalCaixas);
         document.getElementById('totalGastos').innerText = formatarMoeda(tGastos);
-        document.getElementById('saldoFinal').innerText = formatarMoeda(tComissao - tGastos);
         
-        // Salva metadados
+        // O Saldo Final agora soma as comissões + o valor das caixas e subtrai os gastos
+        document.getElementById('saldoFinal').innerText = formatarMoeda((tComissao + valorTotalCaixas) - tGastos);
+        
         dados.info.num = document.getElementById('numViagem').value;
         dados.info.inicio = document.getElementById('dataInicio').value;
         dados.info.fim = document.getElementById('dataFim').value;
+        dados.info.caixas = qtdCaixas;
         
-        localStorage.setItem('relatorio_v6', JSON.stringify(dados));
+        localStorage.setItem('relatorio_v7', JSON.stringify(dados));
     }
 
     function adicionarNota() {
@@ -147,10 +160,14 @@
         const num = document.getElementById('numViagem').value || "S/N";
         const inicio = formatarDataBR(document.getElementById('dataInicio').value);
         const fim = formatarDataBR(document.getElementById('dataFim').value);
+        const qtdC = dados.info.caixas || 0;
+        const valC = qtdC * 50;
         
         let texto = `*🚚 RELATÓRIO DE VIAGEM Nº ${num}*\n`;
         texto += `📅 Período: ${inicio} até ${fim}\n\n`;
         
+        texto += `*📦 CAIXAS:* ${qtdC} un. (${formatarMoeda(valC)})\n\n`;
+
         texto += `*💰 NOTAS/COMISSÕES:*\n`;
         dados.notas.forEach(n => {
             let com = n.valor * (n.comissao/100);
@@ -166,9 +183,9 @@
         let tg = dados.gastos.reduce((acc, g) => acc + g.valor, 0);
         
         texto += `\n---------------------------\n`;
-        texto += `*💵 TOTAL COMISSÃO:* ${formatarMoeda(tc)}\n`;
+        texto += `*💵 TOTAL COMISSÃO + CAIXAS:* ${formatarMoeda(tc + valC)}\n`;
         texto += `*📉 TOTAL GASTOS:* ${formatarMoeda(tg)}\n`;
-        texto += `*⚖️ SALDO LÍQUIDO: ${formatarMoeda(tc - tg)}*`;
+        texto += `*⚖️ SALDO LÍQUIDO: ${formatarMoeda((tc + valC) - tg)}*`;
 
         navigator.clipboard.writeText(texto).then(() => {
             const toast = document.getElementById('toast');
@@ -179,15 +196,15 @@
 
     function limparDados() {
         if(confirm("Zerar tudo?")) {
-            dados = { info: {num: '', inicio: '', fim: ''}, notas: [], gastos: [] };
+            dados = { info: {num: '', inicio: '', fim: '', caixas: 0}, notas: [], gastos: [] };
             document.getElementById('numViagem').value = '';
             document.getElementById('dataInicio').value = '';
             document.getElementById('dataFim').value = '';
+            document.getElementById('qtdCaixas').value = '';
             atualizarTela();
         }
     }
     
-    // Escuta mudanças nos inputs de data e numero para salvar automático
     document.getElementById('numViagem').addEventListener('input', atualizarTela);
     document.getElementById('dataInicio').addEventListener('input', atualizarTela);
     document.getElementById('dataFim').addEventListener('input', atualizarTela);
