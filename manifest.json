@@ -1,15 +1,14 @@
 {
-  "name": "Relatório de Viagens",
-  "short_name": "Relatório",
-  "description": "Gerenciador de comissões, caixas e passagens",
+  "name": "Relatório de Viagens PRO",
+  "short_name": "ViagemPRO",
+  "description": "Gestão de comissões, caixas e despesas de viagem",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#f4f7f6",
   "theme_color": "#2c3e50",
-  "orientation": "portrait",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/201/201623.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/4345/4345573.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
