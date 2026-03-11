@@ -6,7 +6,7 @@
     <title>Relatório de Viagens PRO</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        :root { --primary: #2c3e50; --accent: #27ae60; --bg: #f4f7f6; }
+        :root { --primary: #2c3e50; --accent: #27ae60; --bg: #f4f7f6; --danger: #e74c3c; --edit: #f39c12; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 15px; }
         .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1 { color: var(--primary); text-align: center; font-size: 1.4rem; border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
@@ -17,6 +17,15 @@
         .btn-save { background: var(--accent); }
         .btn-copy { background: #3498db; margin-top: 10px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        /* Listas e Botões de Ação */
+        .item-list { margin-top: 10px; font-size: 0.85rem; border-top: 1px solid #eee; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #ddd; }
+        .actions { display: flex; gap: 5px; }
+        .btn-action { width: 30px; height: 30px; padding: 0; border-radius: 4px; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+        .btn-del { background: var(--danger); }
+        .btn-edit { background: var(--edit); }
+        
         .summary { background: #eef2f7; padding: 15px; border-radius: 8px; margin-top: 20px; }
         .summary p { margin: 8px 0; display: flex; justify-content: space-between; }
         .total-destaque { font-size: 1.1rem; color: #2c3e50; border-top: 1px solid #ccc; padding-top: 10px; }
@@ -50,6 +59,7 @@
             <input type="text" id="comissao" placeholder="Comiss. %" inputmode="decimal">
         </div>
         <button onclick="adicionarNota()" class="btn-save">➕ Adicionar Nota</button>
+        <div id="listaNotas" class="item-list"></div>
     </div>
 
     <div class="section">
@@ -57,6 +67,7 @@
         <input type="text" id="descPassagem" placeholder="Descrição (Ex: Londrina/SP)">
         <input type="text" id="valorPassagem" placeholder="Valor da Passagem" inputmode="decimal">
         <button onclick="adicionarPassagem()" style="background: #9b59b6;">🎟️ Adicionar Passagem</button>
+        <div id="listaPassagens" class="item-list"></div>
     </div>
 
     <div class="section">
@@ -70,6 +81,7 @@
         </select>
         <input type="text" id="valorGasto" placeholder="Valor Gasto" inputmode="decimal">
         <button onclick="adicionarGasto()">💸 Registrar Gasto</button>
+        <div id="listaGastos" class="item-list"></div>
     </div>
 
     <div class="summary">
@@ -109,7 +121,6 @@
         let tComissao = dados.notas.reduce((acc, n) => acc + (n.valor * (n.comissao/100)), 0);
         let tPassagens = dados.passagens.reduce((acc, p) => acc + p.valor, 0);
         let tGastos = dados.gastos.reduce((acc, g) => acc + g.valor, 0);
-        
         let qtdCaixas = parseInt(document.getElementById('qtdCaixas').value) || 0;
         let valC = qtdCaixas * 50;
 
@@ -119,16 +130,63 @@
         document.getElementById('totalGastos').innerText = formatarMoeda(tPassagens + tGastos);
         document.getElementById('saldoFinal').innerText = formatarMoeda((tComissao + valC) - (tPassagens + tGastos));
         
+        renderizarLista('listaNotas', dados.notas, 'valor');
+        renderizarLista('listaPassagens', dados.passagens, 'valor');
+        renderizarLista('listaGastos', dados.gastos, 'valor');
+
         dados.info = { num: document.getElementById('numViagem').value, inicio: document.getElementById('dataInicio').value, fim: document.getElementById('dataFim').value, caixas: qtdCaixas };
         localStorage.setItem('relatorio_v8', JSON.stringify(dados));
+    }
+
+    function renderizarLista(idElemento, arrayDados, campoValor) {
+        const div = document.getElementById(idElemento);
+        div.innerHTML = '';
+        arrayDados.forEach((item, index) => {
+            const label = item.cliente || item.desc || item.tipo || "Item";
+            div.innerHTML += `
+                <div class="item-row">
+                    <span>${label}: ${formatarMoeda(item[campoValor])}</span>
+                    <div class="actions">
+                        <button class="btn-action btn-edit" onclick="editarItem('${idElemento}', ${index})">✏️</button>
+                        <button class="btn-action btn-del" onclick="removerItem('${idElemento}', ${index})">✕</button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function removerItem(tipoLista, index) {
+        if (tipoLista === 'listaNotas') dados.notas.splice(index, 1);
+        if (tipoLista === 'listaPassagens') dados.passagens.splice(index, 1);
+        if (tipoLista === 'listaGastos') dados.gastos.splice(index, 1);
+        atualizarTela();
+    }
+
+    function editarItem(tipoLista, index) {
+        let item;
+        if (tipoLista === 'listaNotas') {
+            item = dados.notas.splice(index, 1)[0];
+            document.getElementById('cliente').value = item.cliente;
+            document.getElementById('valorNota').value = item.valor.toString().replace('.', ',');
+            document.getElementById('comissao').value = item.comissao;
+        } else if (tipoLista === 'listaPassagens') {
+            item = dados.passagens.splice(index, 1)[0];
+            document.getElementById('descPassagem').value = item.desc;
+            document.getElementById('valorPassagem').value = item.valor.toString().replace('.', ',');
+        } else if (tipoLista === 'listaGastos') {
+            item = dados.gastos.splice(index, 1)[0];
+            document.getElementById('tipoGasto').value = item.tipo;
+            document.getElementById('valorGasto').value = item.valor.toString().replace('.', ',');
+        }
+        atualizarTela();
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Sobe a tela para o campo de edição
     }
 
     function adicionarNota() {
         const v = limparMoeda(document.getElementById('valorNota').value);
         if(v > 0) {
             dados.notas.push({ cliente: document.getElementById('cliente').value || "Cli", valor: v, comissao: limparMoeda(document.getElementById('comissao').value) });
-            atualizarTela();
             document.getElementById('cliente').value = ''; document.getElementById('valorNota').value = '';
+            atualizarTela();
         }
     }
 
@@ -136,8 +194,8 @@
         const v = limparMoeda(document.getElementById('valorPassagem').value);
         if(v > 0) {
             dados.passagens.push({ desc: document.getElementById('descPassagem').value || "Passagem", valor: v });
-            atualizarTela();
             document.getElementById('descPassagem').value = ''; document.getElementById('valorPassagem').value = '';
+            atualizarTela();
         }
     }
 
@@ -145,8 +203,8 @@
         const v = limparMoeda(document.getElementById('valorGasto').value);
         if(v > 0) {
             dados.gastos.push({ tipo: document.getElementById('tipoGasto').value, valor: v });
-            atualizarTela();
             document.getElementById('valorGasto').value = '';
+            atualizarTela();
         }
     }
 
@@ -161,34 +219,28 @@
         const valC = info.caixas * 50;
         let texto = `*🚚 RELATÓRIO Nº ${info.num || 'S/N'}*\n📅 ${formatarDataBR(info.inicio)} até ${formatarDataBR(info.fim)}\n\n`;
         texto += `*📦 CAIXAS:* ${info.caixas} un. (${formatarMoeda(valC)})\n\n`;
-
         texto += `*💰 NOTAS/COMISSÕES:*\n`;
         dados.notas.forEach(n => texto += `• ${n.cliente}: ${formatarMoeda(n.valor)} (${n.comissao}% = ${formatarMoeda(n.valor * (n.comissao/100))})\n`);
-
         if(dados.passagens.length > 0) {
             texto += `\n*🎟️ PASSAGENS:*\n`;
             dados.passagens.forEach(p => texto += `• ${p.desc}: ${formatarMoeda(p.valor)}\n`);
         }
-
         texto += `\n*💸 OUTRAS DESPESAS:*\n`;
         dados.gastos.forEach(g => texto += `• ${g.tipo}: ${formatarMoeda(g.valor)}\n`);
-
         let tCom = dados.notas.reduce((acc, n) => acc + (n.valor * (n.comissao/100)), 0);
         let tGas = dados.passagens.reduce((acc, p) => acc + p.valor, 0) + dados.gastos.reduce((acc, g) => acc + g.valor, 0);
-        
         texto += `\n---------------------------\n`;
         texto += `*💵 TOTAL LUCRO:* ${formatarMoeda(tCom + valC)}\n`;
         texto += `*📉 TOTAL GASTOS:* ${formatarMoeda(tGas)}\n`;
         texto += `*⚖️ SALDO LÍQUIDO: ${formatarMoeda((tCom + valC) - tGas)}*`;
-
         navigator.clipboard.writeText(texto).then(() => {
             const t = document.getElementById('toast'); t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000);
         });
     }
 
     function limparDados() {
-        if(confirm("Zerar tudo?")) {
-            dados = { info: {num: '', inicio: '', fim: '', caixas: 0}, notas: [], passagens: [], gastos: [] };
+        if(confirm("Deseja apagar todos os dados e começar um novo relatório?")) {
+            localStorage.removeItem('relatorio_v8');
             location.reload();
         }
     }
